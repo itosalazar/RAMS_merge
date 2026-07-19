@@ -14,8 +14,8 @@ export function RamsToast({ text, nonce }: { text: string | null; nonce: number 
 
   useEffect(() => {
     if (!text) return;
-    setShown("");
-    let i = 0;
+    // type-on: first tick clears, then one glyph per tick
+    let i = -1;
     const iv = setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));

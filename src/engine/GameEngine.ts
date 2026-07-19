@@ -36,7 +36,7 @@ import {
   SCORE_FOR_MERGE,
   MONOLITH_CLEAR_BONUS,
 } from "../lib/constants";
-import { PRODUCTS, MAX_TIER, productForTier, footprintArea, footprintRadius } from "../data/products";
+import { MAX_TIER, productForTier, footprintArea, footprintRadius } from "../data/products";
 import { Emitter } from "./events";
 import { ParticleField } from "./particles";
 import { mulberry32, dailySeed } from "./rng";
