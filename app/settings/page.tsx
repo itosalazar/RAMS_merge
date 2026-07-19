@@ -22,7 +22,7 @@ function SlideSwitch({
 }) {
   return (
     <button
-      className="w-full flex items-center justify-between bg-bench border border-case rounded-lg p-4 shadow-contact min-h-16"
+      className="w-full flex items-center justify-between bg-board border border-case rounded-lg p-4 shadow-contact min-h-16"
       onClick={() => {
         audio.unlock();
         audio.ui("switch");
@@ -72,7 +72,7 @@ export default function SettingsPage() {
           />
           <SlideSwitch
             label="Music"
-            caption="Generative ambient, 54 BPM"
+            caption="Electronic piano, slow jazz"
             value={settings.music}
             onChange={(v) => {
               setSetting("music", v);
@@ -87,7 +87,7 @@ export default function SettingsPage() {
           />
           <SlideSwitch
             label="Night Shift"
-            caption="The bench after hours"
+            caption="The board after hours"
             value={settings.theme === "night"}
             onChange={(v) => setSetting("theme", v ? "night" : "light")}
           />

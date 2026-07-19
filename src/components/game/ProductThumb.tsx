@@ -2,7 +2,7 @@
 
 /** Renders a product's front elevation into a small canvas — used by the
  * staging tray, target banners and museum cards. Same drawing code as the
- * game sprites, so the archive and the bench can never disagree. */
+ * game sprites, so the archive and the board can never disagree. */
 
 import { useEffect, useRef } from "react";
 import { buildSprites } from "@/src/engine/sprites";

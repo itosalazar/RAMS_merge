@@ -33,7 +33,7 @@ export class ParticleField {
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
         r: 2 + rand() * 1.5,
-        color: rand() < 0.5 ? "#ed8008" : "#d9d2c6",
+        color: rand() < 0.5 ? "#ed8008" : "#d5d8dd",
         born: now,
         life: 260 + rand() * 120,
       });

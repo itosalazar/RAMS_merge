@@ -25,27 +25,27 @@ export interface ThemeColors {
 }
 
 export const LIGHT: ThemeColors = {
-  paper: "#f4f2ed",
-  bench: "#e8e4dc",
-  grid: "#d3ccc0",
-  case_: "#d9d2c6",
-  graphite: "#4d4d4d",
-  ink: "#261201",
+  paper: "#f3f4f6",
+  bench: "#e2e4e8", // the board
+  grid: "#b9bdc4",
+  case_: "#d5d8dd",
+  graphite: "#55585e",
+  ink: "#232528",
   orange: "#ed8008",
-  oak: "#c8a878",
-  oakDark: "#a5875e",
+  oak: "#c6cad0", // board frame (grey, not wood)
+  oakDark: "#a7abb3",
 };
 
 export const NIGHT: ThemeColors = {
-  paper: "#1c1a17",
-  bench: "#242220",
-  grid: "#322f2a",
-  case_: "#3a3630",
-  graphite: "#b8b2a6",
-  ink: "#edeae3",
+  paper: "#17181b",
+  bench: "#212327",
+  grid: "#3a3d43",
+  case_: "#33363b",
+  graphite: "#b3b6bd",
+  ink: "#eceef1",
   orange: "#ed8008",
-  oak: "#5a4a35",
-  oakDark: "#443827",
+  oak: "#33363b",
+  oakDark: "#26282c",
 };
 
 export class Renderer {
@@ -107,7 +107,7 @@ export class Renderer {
     const { ctx, v, theme } = this;
     const t = this.trapezoid();
 
-    // rail (wooden edge) behind the surface
+    // rail — a moulded grey frame with a lit top edge
     const railN = 14, railF = railN * 0.84;
     ctx.beginPath();
     ctx.moveTo(t.nl - railN, v.nearY + railN);
@@ -115,23 +115,39 @@ export class Renderer {
     ctx.lineTo(t.fr + railF, v.farY - railF * 0.6);
     ctx.lineTo(t.nr + railN, v.nearY + railN);
     ctx.closePath();
-    ctx.fillStyle = theme.oak;
+    const railG = ctx.createLinearGradient(0, v.farY - railF, 0, v.nearY + railN);
+    railG.addColorStop(0, theme.oak);
+    railG.addColorStop(1, theme.oakDark);
+    ctx.fillStyle = railG;
     ctx.fill();
-    ctx.strokeStyle = theme.oakDark;
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
     ctx.lineWidth = 1;
     ctx.stroke();
+    // board drop shadow onto the page
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.filter = "blur(6px)";
+    ctx.fillStyle = "#141619";
+    ctx.beginPath();
+    ctx.ellipse(v.cx, v.nearY + railN + 8, v.nearHalfW + railN, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.filter = "none";
+    ctx.restore();
 
-    // surface
+    // surface — soft vertical falloff like a photographed board
     ctx.beginPath();
     ctx.moveTo(t.nl, v.nearY);
     ctx.lineTo(t.fl, v.farY);
     ctx.lineTo(t.fr, v.farY);
     ctx.lineTo(t.nr, v.nearY);
     ctx.closePath();
-    ctx.fillStyle = theme.bench;
+    const surf = ctx.createLinearGradient(0, v.farY, 0, v.nearY);
+    surf.addColorStop(0, theme.bench);
+    surf.addColorStop(1, this.theme === NIGHT ? "#26282c" : "#eceef0");
+    ctx.fillStyle = surf;
     ctx.fill();
 
-    // drafting grid — verticals converge to the perspective
+    // dotted grid (speaker-drill language) at every crossing
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(t.nl, v.nearY);
@@ -141,27 +157,17 @@ export class Renderer {
     ctx.closePath();
     ctx.clip();
 
-    for (let gx = 0, i = 0; gx <= TABLE_W; gx += GRID_PITCH, i++) {
-      const a = project(this.v, gx, TABLE_D);
-      const b = project(this.v, gx, 0);
-      ctx.strokeStyle = theme.grid;
-      ctx.lineWidth = i % HEAVY_EVERY === 0 ? 1.2 : 0.5;
-      ctx.globalAlpha = i % HEAVY_EVERY === 0 ? 0.9 : 0.55;
-      ctx.beginPath();
-      ctx.moveTo(a.sx, a.sy);
-      ctx.lineTo(b.sx, b.sy);
-      ctx.stroke();
-    }
-    for (let gy = 0, j = 0; gy <= TABLE_D; gy += GRID_PITCH, j++) {
-      const a = project(this.v, 0, gy);
-      const b = project(this.v, TABLE_W, gy);
-      ctx.strokeStyle = theme.grid;
-      ctx.lineWidth = j % HEAVY_EVERY === 0 ? 1.2 : 0.5;
-      ctx.globalAlpha = j % HEAVY_EVERY === 0 ? 0.9 : 0.55;
-      ctx.beginPath();
-      ctx.moveTo(a.sx, a.sy);
-      ctx.lineTo(b.sx, b.sy);
-      ctx.stroke();
+    ctx.fillStyle = theme.grid;
+    for (let gx = GRID_PITCH, i = 1; gx < TABLE_W; gx += GRID_PITCH, i++) {
+      for (let gy = GRID_PITCH, j = 1; gy < TABLE_D; gy += GRID_PITCH, j++) {
+        const p = project(this.v, gx, gy);
+        const heavy = i % HEAVY_EVERY === 0 && j % HEAVY_EVERY === 0;
+        const r = (heavy ? 2 : 1.15) * (p.scale / this.v.unit);
+        ctx.globalAlpha = heavy ? 0.85 : 0.55;
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.globalAlpha = 1;
 
@@ -189,7 +195,7 @@ export class Renderer {
     // shrinking-table inset shading
     if (engine.shrinkInset > 1) {
       const ti = this.trapezoid(engine.shrinkInset);
-      ctx.fillStyle = "rgba(38,18,1,0.06)";
+      ctx.fillStyle = "rgba(20,22,25,0.07)";
       ctx.beginPath();
       ctx.moveTo(t.nl, v.nearY);
       ctx.lineTo(t.fl, v.farY);
@@ -232,6 +238,23 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Photographic ground shadow: dense elliptical core with soft falloff. */
+  private softShadow(sx: number, sy: number, r: number): void {
+    const { ctx } = this;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.scale(1, 0.42);
+    const g = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 1.25);
+    g.addColorStop(0, "rgba(20,22,25,0.26)");
+    g.addColorStop(0.55, "rgba(20,22,25,0.13)");
+    g.addColorStop(1, "rgba(20,22,25,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 1.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   /* ── products ──────────────────────────────────────────────────── */
 
   private drawBodies(engine: GameEngine, now: number): void {
@@ -268,15 +291,9 @@ export class Renderer {
       const w = dim.w * proj.scale * pulse * (1 + squash);
       const h = dim.h * proj.scale * pulse * (1 - squash);
 
-      // contact shadow (ellipse in table space)
+      // photographic contact shadow: dense core, soft falloff
       const fr = footprintRadius(p.footprint);
-      ctx.save();
-      ctx.globalAlpha = 0.12;
-      ctx.fillStyle = "#261201";
-      ctx.beginPath();
-      ctx.ellipse(proj.sx, proj.sy, fr * proj.scale * 0.92, fr * proj.scale * 0.4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      this.softShadow(proj.sx, proj.sy, fr * proj.scale);
 
       // sprite, anchored at base, subtle physical rotation
       const rot = clampAngle(body.angle) * 0.25;
@@ -336,13 +353,7 @@ export class Renderer {
     const bob = this.reducedMotion ? 0 : Math.sin(now / 600) * 1.5;
     const w = dim.w * proj.scale;
     const h = dim.h * proj.scale;
-    ctx.save();
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = "#261201";
-    ctx.beginPath();
-    ctx.ellipse(proj.sx, proj.sy, fr * proj.scale * 0.92, fr * proj.scale * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    this.softShadow(proj.sx, proj.sy, fr * proj.scale);
     ctx.drawImage(cv, proj.sx - w / 2, proj.sy - h + fr * proj.scale * 0.18 + bob, w, h);
   }
 

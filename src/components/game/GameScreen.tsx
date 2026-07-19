@@ -294,20 +294,45 @@ export function GameScreen({ mode }: { mode: GameMode }) {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-paper overflow-hidden">
-      {/* HUD */}
+      {/* HUD — the score presides at the top center */}
       <header
-        className="relative z-20 flex items-start justify-between px-4 pt-3"
+        className="relative z-20 grid grid-cols-[1fr_auto_1fr] items-start px-4 pt-3"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
-        <div>
+        {/* left: target chip / countdown */}
+        <div className="flex items-center justify-start">
+          {(mode === "time-attack" || mode === "shrinking") && target > 0 && (
+            <div className="flex items-center gap-2 bg-board border border-case rounded-full px-3 py-1.5 shadow-contact">
+              <ProductThumb tier={target} size={30} />
+              <div>
+                <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70">TARGET</p>
+                <p className="text-[11px] font-semibold text-ink">
+                  {productForTier(target).model}
+                  {mode === "shrinking" && targetsHit > 0 ? ` · ${targetsHit}` : ""}
+                </p>
+              </div>
+            </div>
+          )}
+          {mode === "speed-merge" && remainingS !== null && (
+            <p
+              className={`dot-matrix text-3xl ${remainingS < 3 ? "text-orange-deep" : "text-ink"}`}
+              aria-label="time remaining"
+            >
+              {remainingS.toFixed(1)}
+            </p>
+          )}
+        </div>
+
+        {/* center: the score */}
+        <div className="text-center">
           <p className="text-[11px] font-medium tracking-[0.1em] text-graphite/70">{info.title}</p>
           {mode !== "zen" && mode !== "time-attack" && (
-            <p className="dot-matrix text-2xl text-ink leading-tight" aria-label="score">
+            <p className="dot-matrix text-3xl text-ink leading-tight" aria-label="score">
               {score.toLocaleString("en-US")}
             </p>
           )}
           {mode === "time-attack" && (
-            <p className="dot-matrix text-2xl text-ink leading-tight">{fmtTime(elapsedS)}</p>
+            <p className="dot-matrix text-3xl text-ink leading-tight">{fmtTime(elapsedS)}</p>
           )}
           <AnimatePresence>
             {combo > 1 && (
@@ -323,31 +348,10 @@ export function GameScreen({ mode }: { mode: GameMode }) {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* target / countdown */}
-          {(mode === "time-attack" || mode === "shrinking") && target > 0 && (
-            <div className="flex items-center gap-2 bg-bench border border-case rounded-lg px-2.5 py-1.5 shadow-contact">
-              <div>
-                <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70 text-right">TARGET</p>
-                <p className="text-[11px] font-semibold text-ink text-right">
-                  {productForTier(target).model}
-                  {mode === "shrinking" && targetsHit > 0 ? ` · ${targetsHit}` : ""}
-                </p>
-              </div>
-              <ProductThumb tier={target} size={34} />
-            </div>
-          )}
-          {mode === "speed-merge" && remainingS !== null && (
-            <p
-              className={`dot-matrix text-3xl ${remainingS < 3 ? "text-orange-deep" : "text-ink"}`}
-              aria-label="time remaining"
-            >
-              {remainingS.toFixed(1)}
-            </p>
-          )}
+        <div className="flex items-start justify-end">
           <button
             aria-label={paused ? "resume" : "pause"}
-            className="w-11 h-11 rounded-lg bg-bench border border-case shadow-contact flex items-center justify-center active:translate-y-[1px]"
+            className="w-11 h-11 rounded-full bg-board border border-case shadow-knob flex items-center justify-center active:translate-y-[1px]"
             onClick={() => {
               const en = engineRef.current!;
               const p = !paused;
@@ -372,7 +376,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         </div>
       </header>
 
-      {/* the bench */}
+      {/* the board */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full touch-none"
@@ -385,7 +389,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
       {/* next product well */}
       <div className="absolute right-4 bottom-6 z-20 flex flex-col items-center gap-1 pointer-events-none">
         <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70">NEXT</p>
-        <div className="bg-bench border border-case rounded-lg p-1.5 shadow-contact">
+        <div className="bg-board border border-case rounded-lg p-1.5 shadow-contact">
           <ProductThumb tier={nextTier} size={40} />
         </div>
       </div>
@@ -431,7 +435,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
                 </PushKey>
                 <Link href="/" className="flex-1">
                   <PushKey variant="ghost" className="w-full">
-                    Leave the bench
+                    Leave the board
                   </PushKey>
                 </Link>
               </div>
@@ -457,7 +461,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
             >
               <div className="w-8 h-1 rounded-full bg-case mx-auto mb-6" />
               <p className="text-[11px] font-medium tracking-[0.12em] text-graphite/70 mb-1">
-                {mode === "time-attack" ? "TARGET COMPLETE" : "THE BENCH IS FULL"}
+                {mode === "time-attack" ? "TARGET COMPLETE" : "THE BOARD IS FULL"}
                 {over.newRecord && <span className="text-orange"> · NEW RECORD</span>}
               </p>
               <p className="dot-matrix text-5xl text-ink mb-6">
@@ -493,7 +497,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-bench border border-case rounded-lg p-3 shadow-contact">
+    <div className="bg-board border border-case rounded-lg p-3 shadow-contact">
       <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70 mb-1">{label}</p>
       <p className="text-lg font-semibold text-ink leading-none">{value}</p>
     </div>

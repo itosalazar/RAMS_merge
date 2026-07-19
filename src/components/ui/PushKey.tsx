@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * PushKey — the primary control (GDD §8). A physical key: pressing
- * translates it down 2px and darkens it; never a color swap alone.
+ * PushKey — a moulded control with real volume (ref: product_06).
+ * Super-rounded pill, top light, inner bevel; pressing sinks it 2px.
  */
 
 import { audio } from "@/src/audio/AudioEngine";
@@ -22,15 +22,15 @@ export function PushKey({
   disabled?: boolean;
 }) {
   const base =
-    "relative inline-flex items-center justify-center rounded-lg font-semibold transition-[transform,filter] duration-100 active:translate-y-[2px] active:brightness-95 disabled:opacity-40 disabled:pointer-events-none min-h-12 px-6 text-base";
+    "relative inline-flex items-center justify-center rounded-full font-semibold transition-[transform,filter,box-shadow] duration-100 active:translate-y-[2px] active:brightness-95 active:shadow-contact disabled:opacity-40 disabled:pointer-events-none min-h-12 px-7 text-base";
   const look =
     variant === "primary"
-      ? "bg-orange text-paper shadow-contact border-b-2 border-orange-deep"
+      ? "text-paper shadow-knob bg-[linear-gradient(180deg,#ffa63e_0%,#ed8008_45%,#e06c06_100%)]"
       : variant === "danger"
         ? "bg-transparent text-signal border border-signal/40"
         : variant === "ghost"
           ? "bg-transparent text-graphite border border-case"
-          : "bg-bench text-ink shadow-contact border-b-2 border-case";
+          : "text-ink shadow-knob bg-[linear-gradient(180deg,#fafbfc_0%,#e6e8eb_55%,#d5d8dd_100%)]";
   return (
     <button
       className={`${base} ${look} ${className}`}
@@ -38,6 +38,37 @@ export function PushKey({
       onClick={() => {
         audio.unlock();
         audio.ui("key");
+        haptic.ui();
+        onClick?.();
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Knob — a circular turned control; dark grey body, orange glyph. */
+export function Knob({
+  children,
+  onClick,
+  size = 56,
+  className = "",
+  label,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  size?: number;
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <button
+      aria-label={label}
+      className={`relative inline-flex items-center justify-center rounded-full text-orange transition-transform duration-100 active:translate-y-[2px] active:brightness-95 shadow-knob-dark bg-[radial-gradient(circle_at_35%_28%,#6a6e75_0%,#55585e_45%,#3b3e43_100%)] ${className}`}
+      style={{ width: size, height: size }}
+      onClick={() => {
+        audio.unlock();
+        audio.ui("tick");
         haptic.ui();
         onClick?.();
       }}

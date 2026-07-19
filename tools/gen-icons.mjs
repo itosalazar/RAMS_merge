@@ -11,9 +11,9 @@ import { fileURLToPath } from "node:url";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "icons");
 
-const PAPER = [0xf4, 0xf2, 0xed];
+const PAPER = [0xf3, 0xf4, 0xf6];
 const ORANGE = [0xed, 0x80, 0x08];
-const INK = [0x26, 0x12, 0x01];
+const INK = [0x23, 0x25, 0x28];
 
 /** Signed-distance helpers (4x supersampled coverage). */
 const sdRoundRect = (x, y, cx, cy, hw, hh, r) => {

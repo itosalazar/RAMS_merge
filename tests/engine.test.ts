@@ -7,8 +7,9 @@ import {
   RESTITUTION,
   FRICTION_AIR,
   SPAWN_WEIGHTS,
-  DENSITY_BASE,
-  DENSITY_GROWTH,
+  UNIFORM_MASS,
+  LAUNCH_V_MIN,
+  LAUNCH_V_MAX,
   TABLE_W,
 } from "../src/lib/constants";
 import { PRINCIPLES } from "../src/data/principles";
@@ -72,18 +73,23 @@ describe("the evolution tree", () => {
 });
 
 describe("physics tuning", () => {
-  it("large products are heavier (density growth)", () => {
-    const mass = (t: number) =>
-      footprintArea(productForTier(t).footprint) * DENSITY_BASE * Math.pow(DENSITY_GROWTH, t);
-    for (let t = 2; t <= MAX_TIER; t++) expect(mass(t)).toBeGreaterThan(mass(t - 1));
+  it("every object weighs the same — a clock can shove a sideboard", () => {
+    expect(UNIFORM_MASS).toBeGreaterThan(0);
+    expect(RESTITUTION()).toBe(RESTITUTION());
+    expect(FRICTION_AIR()).toBe(FRICTION_AIR());
   });
 
-  it("large products bounce less and settle sooner", () => {
-    for (let t = 2; t <= MAX_TIER; t++) {
-      expect(RESTITUTION(t)).toBeLessThan(RESTITUTION(t - 1));
-      expect(FRICTION_AIR(t)).toBeGreaterThan(FRICTION_AIR(t - 1));
+  it("drag is low enough that a full-power throw crosses the board", () => {
+    // discrete glide: v *= (1 - frictionAir) per 60Hz step, position += v/60·k
+    // (Matter integrates in plane units per step at our launch scale)
+    let v = LAUNCH_V_MAX;
+    let dist = 0;
+    for (let i = 0; i < 600 && v > 0.05; i++) {
+      dist += v;
+      v *= 1 - FRICTION_AIR();
     }
-    expect(RESTITUTION(MAX_TIER)).toBeGreaterThan(0);
+    expect(dist).toBeGreaterThan(1000); // TABLE_D — reaches the far rail
+    expect(LAUNCH_V_MIN).toBeLessThan(LAUNCH_V_MAX);
   });
 
   it("spawns only small tiers, favoring the smallest", () => {

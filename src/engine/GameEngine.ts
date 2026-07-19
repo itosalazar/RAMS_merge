@@ -10,7 +10,7 @@ import {
   TABLE_D,
   LAUNCH_ZONE_D,
   DENSITY_BASE,
-  DENSITY_GROWTH,
+  UNIFORM_MASS,
   RESTITUTION,
   FRICTION_AIR,
   SURFACE_FRICTION,
@@ -194,7 +194,9 @@ export class GameEngine {
       Bodies.rectangle(TABLE_W / 2, -t / 2, TABLE_W * 2, t, opts), // far
       Bodies.rectangle(-t / 2 + inset, TABLE_D / 2, t, TABLE_D * 2, opts), // left
       Bodies.rectangle(TABLE_W + t / 2 - inset, TABLE_D / 2, t, TABLE_D * 2, opts), // right
-      Bodies.rectangle(TABLE_W / 2, TABLE_D + t / 2, TABLE_W * 2, t, opts), // near
+      // the throw line is one-way: objects live above it and bounce off it,
+      // never back into the staging zone (launches spawn above the barrier)
+      Bodies.rectangle(TABLE_W / 2, TABLE_D - LAUNCH_ZONE_D + t / 2, TABLE_W * 2, t, opts),
     ];
     Composite.add(this.world, this.walls);
   }
@@ -250,13 +252,11 @@ export class GameEngine {
       return false;
     }
     const { tier } = this.staged;
-    const body = this.createBody(tier, this.staged.x, TABLE_D - LAUNCH_ZONE_D / 2, now);
+    // spawn just above the one-way throw line
+    const r = footprintRadius(productForTier(tier).footprint);
+    const body = this.createBody(tier, this.staged.x, TABLE_D - LAUNCH_ZONE_D - r - 4, now);
     const v = LAUNCH_V_MIN + (LAUNCH_V_MAX - LAUNCH_V_MIN) * this.aim.power;
-    const massScale = Math.sqrt(this.tierMass(1) / this.tierMass(tier));
-    Body.setVelocity(body, {
-      x: this.aim.dirX * v * Math.max(0.45, massScale),
-      y: this.aim.dirY * v * Math.max(0.45, massScale),
-    });
+    Body.setVelocity(body, { x: this.aim.dirX * v, y: this.aim.dirY * v });
     Body.setAngularVelocity(body, (this.rand() - 0.5) * 0.15);
     Composite.add(this.world, body);
     if (process.env.NODE_ENV !== "production") console.log("[engine] launch tier", tier, "bodies:", this.productBodies().length);
@@ -270,17 +270,13 @@ export class GameEngine {
     return true;
   }
 
-  private tierMass(tier: number): number {
-    return footprintArea(productForTier(tier).footprint) * DENSITY_BASE * Math.pow(DENSITY_GROWTH, tier);
-  }
-
   private createBody(tier: number, x: number, y: number, now: number): Matter.Body {
     const p = productForTier(tier);
     const common = {
-      restitution: RESTITUTION(tier),
-      frictionAir: FRICTION_AIR(tier),
+      restitution: RESTITUTION(),
+      frictionAir: FRICTION_AIR(),
       friction: SURFACE_FRICTION,
-      density: DENSITY_BASE * Math.pow(DENSITY_GROWTH, tier),
+      density: DENSITY_BASE,
     };
     const body =
       p.footprint.kind === "circle"
@@ -289,6 +285,8 @@ export class GameEngine {
             ...common,
             chamfer: { radius: Math.min(p.footprint.w, p.footprint.h) * 0.18 },
           });
+    // every object weighs the same — a clock can shove a sideboard
+    Body.setMass(body, UNIFORM_MASS);
     this.meta.set(body.id, { tier, bornAt: now, hitAt: 0, hitMag: 0, restContacts: new Map() });
     return body;
   }

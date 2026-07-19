@@ -15,7 +15,7 @@ function fmtTime(s: number): string {
 
 function Cell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-bench border border-case rounded-lg p-4 shadow-contact">
+    <div className="bg-board border border-case rounded-lg p-4 shadow-contact">
       <p className="text-[10px] font-medium tracking-[0.12em] text-graphite/70">{label}</p>
       <p className="dot-matrix text-xl text-ink mt-1.5 leading-none">{value}</p>
     </div>
@@ -58,7 +58,7 @@ export default function RecordsPage() {
           <div className="grid grid-cols-2 gap-2">
             <Cell label="TOTAL MERGES" value={stats.totalMerges.toLocaleString("en-US")} />
             <Cell label="PRODUCTS LAUNCHED" value={stats.totalLaunches.toLocaleString("en-US")} />
-            <Cell label="TIME AT THE BENCH" value={fmtTime(stats.playTimeS)} />
+            <Cell label="TIME AT THE BOARD" value={fmtTime(stats.playTimeS)} />
             <Cell label="SESSIONS" value={String(stats.runs)} />
             <Cell label="DAILY CHALLENGES" value={String(daily.completedDates.length)} />
             <Cell

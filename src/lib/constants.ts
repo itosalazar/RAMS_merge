@@ -10,13 +10,14 @@ export const LAUNCH_Y = TABLE_D - LAUNCH_ZONE_D / 2;
 export const FAR_WIDTH_RATIO = 0.84;
 export const FAR_SPRITE_SCALE = 0.82;
 
-/** Physics tuning (GDD §10). */
-export const DENSITY_BASE = 0.0012;
-export const DENSITY_GROWTH = 1.35;
-export const RESTITUTION = (tier: number) => 0.42 - 0.02 * tier;
-export const FRICTION_AIR = (tier: number) => 0.015 + ((tier - 1) / 10) * 0.02;
-export const SURFACE_FRICTION = 0.08;
-export const WALL_RESTITUTION = 0.55;
+/** Physics tuning (revised: every object weighs the same — a thrown clock
+ * can shove a sideboard, and any launch can reach the far rail). */
+export const UNIFORM_MASS = 5;
+export const DENSITY_BASE = 0.0012; // pre-setMass placeholder density
+export const RESTITUTION = () => 0.5;
+export const FRICTION_AIR = () => 0.011; // low drag: full-board glide
+export const SURFACE_FRICTION = 0.06;
+export const WALL_RESTITUTION = 0.7; // lively carom off the rails
 
 /** Magnetic assist between same-tier pairs. */
 export const MAGNET_RANGE = 1.15;
@@ -26,9 +27,9 @@ export const MAGNET_FORCE = 0.002;
 export const MERGE_MIN_SPEED = 0.35;
 export const MERGE_REST_MS = 600;
 
-/** Launch velocity range, scaled by 1/sqrt(mass). */
-export const LAUNCH_V_MIN = 6;
-export const LAUNCH_V_MAX = 22;
+/** Launch velocity range (uniform mass — no scaling). */
+export const LAUNCH_V_MIN = 7;
+export const LAUNCH_V_MAX = 26;
 
 /** Combo. */
 export const COMBO_WINDOW_MS = 1500;

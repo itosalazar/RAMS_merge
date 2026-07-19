@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
-/* ─── RAMS MERGE design tokens (GDD §6/§7) ─────────────────────────── */
+/* ─── RAMS MERGE design tokens — cool grey system (refs: product_06, UI_game_03) ─── */
 :root {
-  /* core */
-  --paper: #f4f2ed;
-  --bench: #e8e4dc;
-  --case: #d9d2c6;
-  --grid: #d3ccc0;
+  /* core — light cool grays */
+  --paper: #f3f4f6;
+  --board: #e6e8eb;
+  --case: #d5d8dd;
+  --grid: #c7cbd1;
   --steel: #aab7bf;
-  --taupe: #736356;
-  --graphite: #4d4d4d;
-  --ink: #261201;
+  --taupe: #8b8f96;
+  --graphite: #55585e;
+  --ink: #232528;
 
   /* accent */
   --orange: #ed8008;
@@ -18,25 +18,43 @@
   --signal-red: #ad1d1d;
   --olive: #736b1e;
 
-  /* shadows */
-  --shadow-contact: 0 1px 2px rgba(38, 18, 1, 0.1);
-  --shadow-raised: 0 4px 16px rgba(38, 18, 1, 0.08);
+  /* shadows — neutral, photographic */
+  --shadow-contact: 0 1px 2px rgba(20, 22, 25, 0.12);
+  --shadow-raised: 0 6px 20px rgba(20, 22, 25, 0.1);
+  /* 3D control shadows (knobs, keys) */
+  --shadow-knob:
+    0 4px 10px rgba(20, 22, 25, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -2px 4px rgba(20, 22, 25, 0.12);
+  --shadow-knob-dark:
+    0 4px 10px rgba(20, 22, 25, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="night"] {
-  --paper: #1c1a17;
-  --bench: #242220;
-  --case: #3a3630;
-  --grid: #322f2a;
-  --graphite: #b8b2a6;
-  --ink: #edeae3;
-  --shadow-contact: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --paper: #17181b;
+  --board: #1f2124;
+  --case: #33363b;
+  --grid: #2b2e33;
+  --taupe: #6a6e75;
+  --graphite: #b3b6bd;
+  --ink: #eceef1;
+  --shadow-contact: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-raised: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-knob:
+    0 4px 10px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-knob-dark:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
   --color-paper: var(--paper);
-  --color-bench: var(--bench);
+  --color-board: var(--board);
   --color-case: var(--case);
   --color-grid: var(--grid);
   --color-steel: var(--steel);
@@ -50,6 +68,8 @@
   --font-sans: var(--font-hanken);
   --shadow-contact: var(--shadow-contact);
   --shadow-raised: var(--shadow-raised);
+  --shadow-knob: var(--shadow-knob);
+  --shadow-knob-dark: var(--shadow-knob-dark);
 }
 
 html,

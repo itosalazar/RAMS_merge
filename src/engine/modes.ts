@@ -7,7 +7,7 @@ export interface ModeInfo {
 }
 
 export const MODES: ModeInfo[] = [
-  { id: "classic", title: "CLASSIC", caption: "Merge endlessly. The bench is finite." },
+  { id: "classic", title: "CLASSIC", caption: "Merge endlessly. The board is finite." },
   { id: "time-attack", title: "TIME ATTACK", caption: "One target product. Build it fast." },
   { id: "speed-merge", title: "SPEED MERGE", caption: "Every merge resets the clock. Survive." },
   { id: "shrinking", title: "SHRINKING", caption: "The table closes in. Targets buy space." },

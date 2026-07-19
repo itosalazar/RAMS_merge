@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- RAMS MERGE app mark — the orange plaque and the vital dot (GDD Appendix A).
        Purely geometric: no font dependency, honest at any size. -->
-  <rect width="512" height="512" rx="96" fill="#f4f2ed"/>
+  <rect width="512" height="512" rx="96" fill="#f3f4f6"/>
   <rect x="104" y="176" width="304" height="112" rx="8" fill="#ed8008"/>
-  <circle cx="256" cy="368" r="22" fill="#261201"/>
+  <circle cx="256" cy="368" r="22" fill="#232528"/>
 </svg>

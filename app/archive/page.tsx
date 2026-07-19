@@ -79,7 +79,7 @@ export default function ArchivePage() {
             {PRINCIPLES.map((p) => {
               const has = principlesSeen.includes(p.n);
               return (
-                <div key={p.n} className={`rounded-lg border p-4 ${has ? "border-case bg-bench shadow-contact" : "border-case/50"}`}>
+                <div key={p.n} className={`rounded-lg border p-4 ${has ? "border-case bg-board shadow-contact" : "border-case/50"}`}>
                   <p className={`text-sm font-semibold ${has ? "text-ink" : "text-graphite/40"}`}>
                     {p.n.toString().padStart(2, "0")} — {has ? p.text : "· · ·"}
                   </p>
@@ -99,7 +99,7 @@ export default function ArchivePage() {
             {ACHIEVEMENTS.map((a) => {
               const has = achievements.includes(a.id);
               return (
-                <div key={a.id} className={`rounded-lg border p-3 ${has ? "border-case bg-bench shadow-contact" : "border-case/50"}`}>
+                <div key={a.id} className={`rounded-lg border p-3 ${has ? "border-case bg-board shadow-contact" : "border-case/50"}`}>
                   <div className="flex items-center gap-1.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${has ? "bg-olive" : "bg-case"}`} />
                     <p className={`text-[13px] font-semibold ${has ? "text-ink" : "text-graphite/40"}`}>{a.name}</p>
@@ -118,7 +118,7 @@ export default function ArchivePage() {
           </p>
           <div className="space-y-2">
             {TRIVIA.filter((t) => triviaUnlocked.includes(t.id)).map((t) => (
-              <div key={t.id} className="rounded-lg border border-case bg-bench p-4 shadow-contact">
+              <div key={t.id} className="rounded-lg border border-case bg-board p-4 shadow-contact">
                 <p className="text-sm font-semibold text-ink">{t.title}</p>
                 <p className="selectable text-[13px] text-graphite mt-1.5 leading-relaxed">{t.text}</p>
               </div>
@@ -164,7 +164,7 @@ export default function ArchivePage() {
                         </h2>
                         <p className="text-sm text-graphite">{p.object}</p>
                       </div>
-                      <div className="bg-bench border border-case rounded-lg p-2 shadow-contact">
+                      <div className="bg-board border border-case rounded-lg p-2 shadow-contact">
                         <ProductThumb tier={p.tier} size={72} />
                       </div>
                     </div>

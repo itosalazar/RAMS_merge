@@ -1,46 +1,46 @@
 /**
- * The sprite atelier — every RM product drawn in code as a front elevation
- * (GDD §4). Sprites are rendered once per tier per DPR into offscreen
- * canvases; the game loop only blits transforms.
- *
- * Palette discipline: warm-white bodies, greys, one orange element each.
+ * The sprite atelier — eleven fictional objects INSPIRED BY the Rams school,
+ * never copies of real products (creative direction, 2026-07). Rendered
+ * "photographically" (ref: product_06): soft top light, body gradients,
+ * specular highlights, ambient occlusion. Sprites are rasterized once per
+ * tier per DPR; the game loop only blits transforms.
  */
 
 import { PRODUCTS, Product } from "../data/products";
 
+/* cool grey material system */
 const C = {
-  paper: "#f4f2ed",
-  body: "#e9e6df",
-  bodyDark: "#ddd8cd",
-  case: "#d9d2c6",
+  body: "#eceded", // base plastic
+  bodyLo: "#d9dbdf",
+  bodyHi: "#f8f9fa",
+  panel: "#e0e2e6",
+  case: "#d5d8dd",
+  dark: "#2e3033",
+  darkLo: "#1f2124",
+  screen: "#272b29",
   steel: "#aab7bf",
-  steelDark: "#8d9aa3",
-  taupe: "#736356",
-  oak: "#b08f62",
-  oakLight: "#c8a878",
-  graphite: "#4d4d4d",
-  ink: "#261201",
-  dark: "#332f2a",
-  screen: "#2a3129",
+  steelDark: "#8d99a2",
+  grey: "#b9bdc4", // rims & frames (no wood in this universe)
+  greyDark: "#9a9ea6",
+  graphite: "#55585e",
+  ink: "#232528",
+  white: "#fafbfc",
+  hairline: "#c3c6cc",
   orange: "#ed8008",
-  orangeDeep: "#ea5b0c",
-  white: "#fbfaf7",
-  hairline: "#c9c2b4",
+  orangeHi: "#ffa63e",
+  orangeLo: "#cf6a05",
 };
 
 export interface SpriteSheet {
-  /** canvas per tier (index tier-1), drawn at `raster` px per plane unit */
   canvases: HTMLCanvasElement[];
   raster: number;
-  /** sprite plane-size per tier: width, height, and baseline offset */
   dims: { w: number; h: number }[];
 }
 
-/** Padding around each sprite in plane units (shadow bleed). */
-const PAD = 8;
+const PAD = 10;
 
 export function buildSprites(dpr: number): SpriteSheet {
-  const raster = Math.min(3, Math.max(1.5, dpr)) * 1.25; // crisp on retina
+  const raster = Math.min(3, Math.max(1.5, dpr)) * 1.25;
   const canvases: HTMLCanvasElement[] = [];
   const dims: { w: number; h: number }[] = [];
 
@@ -64,22 +64,105 @@ export function spriteWidth(p: Product): number {
   return p.footprint.kind === "circle" ? p.footprint.r * 2 : p.footprint.w;
 }
 
-/* ── drawing helpers ─────────────────────────────────────────────── */
+/* ── photographic helpers ────────────────────────────────────────── */
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
 }
 
-function fillRR(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string, stroke?: string) {
+/** A moulded plastic body: vertical gradient, top highlight, base shading. */
+function body3D(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, hi = C.bodyHi, mid = C.body, lo = C.bodyLo) {
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, hi);
+  g.addColorStop(0.18, mid);
+  g.addColorStop(0.85, mid);
+  g.addColorStop(1, lo);
+  rr(ctx, x, y, w, h, r);
+  ctx.fillStyle = g;
+  ctx.fill();
+  // side vignette
+  const sv = ctx.createLinearGradient(x, 0, x + w, 0);
+  sv.addColorStop(0, "rgba(35,37,40,0.07)");
+  sv.addColorStop(0.12, "rgba(35,37,40,0)");
+  sv.addColorStop(0.88, "rgba(35,37,40,0)");
+  sv.addColorStop(1, "rgba(35,37,40,0.09)");
+  rr(ctx, x, y, w, h, r);
+  ctx.fillStyle = sv;
+  ctx.fill();
+  // crisp top light
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.8, y + 0.6);
+  ctx.lineTo(x + w - r * 0.8, y + 0.6);
+  ctx.stroke();
+  // hairline contour
+  rr(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r);
+  ctx.strokeStyle = "rgba(35,37,40,0.16)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+/** Recessed panel (speaker fields, wells). */
+function inset(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill = C.panel) {
   rr(ctx, x, y, w, h, r);
   ctx.fillStyle = fill;
   ctx.fill();
-  if (stroke) {
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
+  const g = ctx.createLinearGradient(0, y, 0, y + Math.min(6, h));
+  g.addColorStop(0, "rgba(35,37,40,0.14)");
+  g.addColorStop(1, "rgba(35,37,40,0)");
+  rr(ctx, x, y, w, Math.min(6, h), r);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.6)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y + h - 0.5);
+  ctx.lineTo(x + w - r, y + h - 0.5);
+  ctx.stroke();
+}
+
+/** A turned knob / button with a specular. */
+function knob3D(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, base = C.white, edge?: string) {
+  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.15, cx, cy, r * 1.15);
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(0.45, base);
+  g.addColorStop(1, edge ?? shade(base, -28));
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(35,37,40,0.22)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // soft drop under the knob
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = C.ink;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + r * 0.95, r * 0.8, r * 0.28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** The vital orange control. */
+function orange3D(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.12, cx, cy, r * 1.1);
+  g.addColorStop(0, C.orangeHi);
+  g.addColorStop(0.55, C.orange);
+  g.addColorStop(1, C.orangeLo);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(35,37,40,0.25)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.beginPath();
+  ctx.ellipse(cx - r * 0.3, cy - r * 0.4, r * 0.22, r * 0.14, -0.6, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function dot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fill: string) {
@@ -89,325 +172,343 @@ function dot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fil
   ctx.fill();
 }
 
-/** speaker perforation grid */
-function holes(ctx: CanvasRenderingContext2D, x: number, y: number, cols: number, rows: number, pitch: number, r: number, color = C.graphite) {
-  for (let i = 0; i < cols; i++)
-    for (let j = 0; j < rows; j++) dot(ctx, x + i * pitch, y + j * pitch, r, color);
+/** Drilled speaker hole — dark core, lit lower rim. */
+function hole(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  dot(ctx, x, y + 0.6, r, "rgba(255,255,255,0.75)");
+  dot(ctx, x, y, r, "#3a3d42");
+  dot(ctx, x - r * 0.2, y - r * 0.25, r * 0.5, "#26282c");
 }
 
-/** concentric perforation spiral (Klang face, DR06 reference) */
-function spiralHoles(ctx: CanvasRenderingContext2D, cx: number, cy: number, maxR: number, color = C.graphite) {
-  dot(ctx, cx, cy, 1.6, color);
+function holes(ctx: CanvasRenderingContext2D, x: number, y: number, cols: number, rows: number, pitch: number, r: number) {
+  for (let i = 0; i < cols; i++)
+    for (let j = 0; j < rows; j++) hole(ctx, x + i * pitch, y + j * pitch, r);
+}
+
+function spiralHoles(ctx: CanvasRenderingContext2D, cx: number, cy: number, maxR: number) {
+  hole(ctx, cx, cy, 1.6);
   for (let ring = 1; ring * 7 < maxR; ring++) {
     const r = ring * 7;
     const n = Math.max(6, Math.round((Math.PI * 2 * r) / 8));
     for (let k = 0; k < n; k++) {
       const a = (k / n) * Math.PI * 2 + ring * 0.35;
-      dot(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.6, color);
+      hole(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.6);
     }
   }
 }
 
-/* ── the eleven products ─────────────────────────────────────────── */
+function shade(hex: string, amt: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const c = (v: number) => Math.max(0, Math.min(255, v + amt));
+  return `#${((c(n >> 16) << 16) | (c((n >> 8) & 255) << 8) | c(n & 255)).toString(16).padStart(6, "0")}`;
+}
+
+/* ── the eleven objects (inspired, never copied) ─────────────────── */
 
 type Drawer = (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 
-/** RM-01 Punkt — pocket alarm clock */
+/** T1 Punkt — a small cube alarm clock, round face, orange snooze on top */
 const punkt: Drawer = (ctx, w, h) => {
-  const r = w / 2;
-  const cx = r, cy = h - r; // face circle sits on the base
-  // feet
-  fillRR(ctx, cx - r * 0.55, h - 3, r * 0.35, 3, 1.5, C.graphite);
-  fillRR(ctx, cx + r * 0.2, h - 3, r * 0.35, 3, 1.5, C.graphite);
-  // bell hump
-  ctx.beginPath();
-  ctx.arc(cx, cy - r + 2, r * 0.28, Math.PI, 0);
-  ctx.fillStyle = C.case;
+  const bw = w, bh = h * 0.82, by = h - bh;
+  // orange snooze bar on top
+  rr(ctx, w * 0.32, by - 4, w * 0.36, 7, 3.5);
+  const og = ctx.createLinearGradient(0, by - 4, 0, by + 3);
+  og.addColorStop(0, C.orangeHi);
+  og.addColorStop(1, C.orangeLo);
+  ctx.fillStyle = og;
   ctx.fill();
-  // body
-  dot(ctx, cx, cy, r, C.white);
-  ctx.strokeStyle = C.hairline;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - 0.75, 0, Math.PI * 2);
-  ctx.stroke();
+  body3D(ctx, 0, by, bw, bh, w * 0.22);
+  // recessed round face
+  const cx = w / 2, cy = by + bh / 2, r = Math.min(w, bh) * 0.34;
+  knob3D(ctx, cx, cy, r + 2, C.white);
   // ticks
-  ctx.strokeStyle = C.case;
+  ctx.strokeStyle = C.hairline;
   ctx.lineWidth = 1;
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * (r - 4), cy + Math.sin(a) * (r - 4));
-    ctx.lineTo(cx + Math.cos(a) * (r - 7), cy + Math.sin(a) * (r - 7));
+    ctx.moveTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2));
+    ctx.lineTo(cx + Math.cos(a) * (r - 4.5), cy + Math.sin(a) * (r - 4.5));
     ctx.stroke();
   }
-  // hands at 10:08
+  // hands
   ctx.strokeStyle = C.ink;
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(-2.1) * r * 0.45, cy + Math.sin(-2.1) * r * 0.45);
-  ctx.stroke();
-  ctx.beginPath();
+  ctx.lineTo(cx + Math.cos(-2.1) * r * 0.5, cy + Math.sin(-2.1) * r * 0.5);
   ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(-0.55) * r * 0.68, cy + Math.sin(-0.55) * r * 0.68);
+  ctx.lineTo(cx + Math.cos(-0.55) * r * 0.72, cy + Math.sin(-0.55) * r * 0.72);
   ctx.stroke();
   dot(ctx, cx, cy, 1.8, C.ink);
-  // orange second-dot at rim
-  dot(ctx, cx + Math.cos(-1.1) * (r - 5.5), cy + Math.sin(-1.1) * (r - 5.5), 2.2, C.orange);
 };
 
-/** RM-02 Funk — transistor radio */
+/** T2 Funk — a pocket receiver: dot field above, centered dial below */
 const funk: Drawer = (ctx, w, h) => {
-  fillRR(ctx, 0, 0, w, h, 7, C.body, C.hairline);
-  // speaker grid upper 2/3
-  holes(ctx, 9, 10, 6, 6, (w - 18) / 5, 1.5);
-  // divider hairline
-  ctx.strokeStyle = C.hairline;
-  ctx.beginPath();
-  ctx.moveTo(6, h * 0.66);
-  ctx.lineTo(w - 6, h * 0.66);
-  ctx.stroke();
-  // tuning dial with orange pointer
-  const dy = h * 0.83;
-  dot(ctx, w * 0.3, dy, 8.5, C.white);
-  ctx.strokeStyle = C.case;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(w * 0.3, dy, 8.5, 0, Math.PI * 2);
-  ctx.strokeStyle = C.hairline;
-  ctx.stroke();
+  body3D(ctx, 0, 0, w, h, 9);
+  inset(ctx, w * 0.12, h * 0.1, w * 0.76, h * 0.42, 5);
+  holes(ctx, w * 0.2, h * 0.18, 5, 3, (w * 0.6) / 4, 1.5);
+  // centered dial with orange pointer
+  const dy = h * 0.74;
+  knob3D(ctx, w / 2, dy, 10, C.white);
   ctx.strokeStyle = C.orange;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(w * 0.3, dy);
-  ctx.lineTo(w * 0.3 + 6, dy - 4.5);
+  ctx.moveTo(w / 2, dy);
+  ctx.lineTo(w / 2 + 6.5, dy - 5);
   ctx.stroke();
-  // thumbwheel slot
-  fillRR(ctx, w * 0.55, dy - 2.5, w * 0.3, 5, 2.5, C.graphite);
+  // two side studs
+  knob3D(ctx, w * 0.16, dy, 3.5, C.case);
+  knob3D(ctx, w * 0.84, dy, 3.5, C.case);
 };
 
-/** RM-03 Notiz — pocket tape recorder */
+/** T3 Notiz — a pocket dictation machine: window, three keys, grey strap */
 const notiz: Drawer = (ctx, w, h) => {
-  // leather strap peeking over the top
-  ctx.strokeStyle = C.taupe;
+  ctx.strokeStyle = C.greyDark;
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(w * 0.3, 4);
-  ctx.quadraticCurveTo(w / 2, -6, w * 0.7, 4);
+  ctx.moveTo(w * 0.3, 5);
+  ctx.quadraticCurveTo(w / 2, -5, w * 0.7, 5);
   ctx.stroke();
-  fillRR(ctx, 0, 2, w, h - 2, 8, C.body, C.hairline);
-  // cassette window
-  const wx = w * 0.14, wy = h * 0.18, ww = w * 0.72, wh = h * 0.4;
-  fillRR(ctx, wx, wy, ww, wh, 5, C.bodyDark, C.hairline);
-  dot(ctx, wx + ww * 0.28, wy + wh / 2, wh * 0.28, C.dark);
-  dot(ctx, wx + ww * 0.72, wy + wh / 2, wh * 0.28, C.dark);
-  dot(ctx, wx + ww * 0.28, wy + wh / 2, wh * 0.12, C.body);
-  dot(ctx, wx + ww * 0.72, wy + wh / 2, wh * 0.12, C.body);
-  // acrylic sheen
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(wx + 3, wy + wh - 3);
-  ctx.lineTo(wx + ww * 0.4, wy + 3);
-  ctx.stroke();
-  // three piano keys, middle orange (record)
-  const ky = h * 0.72, kw = w * 0.22, kh = h * 0.17;
-  fillRR(ctx, w * 0.13, ky, kw, kh, 3, C.case, C.hairline);
-  fillRR(ctx, w * 0.39, ky, kw, kh, 3, C.orange);
-  fillRR(ctx, w * 0.65, ky, kw, kh, 3, C.case, C.hairline);
+  body3D(ctx, 0, 3, w, h - 3, 9);
+  // cassette window with glass sheen
+  const wx = w * 0.14, wy = h * 0.18, ww = w * 0.72, wh = h * 0.38;
+  inset(ctx, wx, wy, ww, wh, 5, C.dark);
+  dot(ctx, wx + ww * 0.28, wy + wh / 2, wh * 0.26, "#4a4e54");
+  dot(ctx, wx + ww * 0.72, wy + wh / 2, wh * 0.26, "#4a4e54");
+  dot(ctx, wx + ww * 0.28, wy + wh / 2, wh * 0.1, C.body);
+  dot(ctx, wx + ww * 0.72, wy + wh / 2, wh * 0.1, C.body);
+  const glass = ctx.createLinearGradient(wx, wy, wx + ww * 0.5, wy + wh);
+  glass.addColorStop(0, "rgba(255,255,255,0.28)");
+  glass.addColorStop(0.5, "rgba(255,255,255,0.04)");
+  glass.addColorStop(1, "rgba(255,255,255,0)");
+  rr(ctx, wx, wy, ww, wh, 5);
+  ctx.fillStyle = glass;
+  ctx.fill();
+  // three keys, middle orange
+  const ky = h * 0.7, kw = w * 0.2, kh = h * 0.16;
+  for (const [i, kx] of [w * 0.16, w * 0.4, w * 0.64].entries()) {
+    rr(ctx, kx, ky, kw, kh, kh / 2);
+    const g = ctx.createLinearGradient(0, ky, 0, ky + kh);
+    if (i === 1) {
+      g.addColorStop(0, C.orangeHi);
+      g.addColorStop(1, C.orangeLo);
+    } else {
+      g.addColorStop(0, C.bodyHi);
+      g.addColorStop(1, C.bodyLo);
+    }
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(35,37,40,0.2)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
 };
 
-/** RM-04 Zahl — desktop calculator (wedge, top display visible) */
+/** T4 Zahl — a desk calculator wedge with pillow keys */
 const zahl: Drawer = (ctx, w, h) => {
-  fillRR(ctx, 0, 0, w, h, 6, C.body, C.hairline);
-  // top face wedge with display
-  fillRR(ctx, 3, 3, w - 6, h * 0.22, 4, C.bodyDark);
-  fillRR(ctx, w * 0.12, h * 0.06, w * 0.76, h * 0.13, 2, C.dark);
-  ctx.fillStyle = "#9fb2a0";
-  ctx.font = `600 ${h * 0.1}px ui-monospace, monospace`;
+  body3D(ctx, 0, 0, w, h, 7);
+  // display
+  inset(ctx, w * 0.12, h * 0.07, w * 0.76, h * 0.15, 3, C.dark);
+  ctx.fillStyle = "#a9bfa9";
+  ctx.font = `600 ${h * 0.09}px ui-monospace, monospace`;
   ctx.textAlign = "right";
-  ctx.fillText("0.", w * 0.84, h * 0.165);
-  // 4×4 key grid, one orange `=`
-  const gx = w * 0.1, gy = h * 0.32, pitch = (w * 0.8) / 4;
+  ctx.fillText("0.", w * 0.84, h * 0.18);
+  // 4×4 pillow keys, orange `=`
+  const gx = w * 0.1, gy = h * 0.3, pitch = (w * 0.8) / 4;
   for (let i = 0; i < 4; i++)
     for (let j = 0; j < 4; j++) {
-      const orange = i === 3 && j === 3;
-      const kx = gx + i * pitch, ky = gy + j * pitch * 0.72;
-      dot(ctx, kx + pitch * 0.38, ky + pitch * 0.3, pitch * 0.3, orange ? C.orange : C.white);
-      if (!orange) {
-        ctx.strokeStyle = C.hairline;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(kx + pitch * 0.38, ky + pitch * 0.3, pitch * 0.3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      const kx = gx + i * pitch + pitch * 0.38;
+      const ky = gy + j * pitch * 0.72 + pitch * 0.3;
+      if (i === 3 && j === 3) orange3D(ctx, kx, ky, pitch * 0.3);
+      else knob3D(ctx, kx, ky, pitch * 0.3, C.white);
     }
 };
 
-/** RM-05 Klang — bookshelf speaker (squircle, spiral grille) */
+/** T5 Klang — a soft-square speaker, spiral drill pattern, grey rim */
 const klang: Drawer = (ctx, w, h) => {
-  // oak rim catching light on top
-  fillRR(ctx, 0, 0, w, h, w * 0.24, C.oak);
-  fillRR(ctx, 2, 3, w - 4, h - 5, w * 0.22, C.body);
-  spiralHoles(ctx, w / 2, h / 2 + 1, Math.min(w, h) * 0.38);
-  // orange power dot, bottom center
-  dot(ctx, w / 2, h - 8, 2.6, C.orange);
+  body3D(ctx, 0, 0, w, h, w * 0.24, "#cdd1d7", C.grey, "#a3a8b0");
+  body3D(ctx, 2.5, 3, w - 5, h - 6, w * 0.22);
+  spiralHoles(ctx, w / 2, h / 2 + 1, Math.min(w, h) * 0.37);
+  orange3D(ctx, w / 2, h - 9, 3);
 };
 
-/** RM-06 Welle — table radio (slat grille + tuning scale) */
+/** T6 Welle — a table receiver: tuning window up top, slat vents below */
 const welle: Drawer = (ctx, w, h) => {
   // plinth
-  fillRR(ctx, w * 0.06, h - 5, w * 0.88, 5, 2, C.graphite);
-  fillRR(ctx, 0, 0, w, h - 4, 6, C.body, C.hairline);
-  // top-face key row
-  const bw = w * 0.05;
-  for (let i = 0; i < 4; i++) fillRR(ctx, w * 0.62 + i * bw * 1.5, 4, bw, 4, 1.5, C.case, C.hairline);
-  // slat grille, left half
-  ctx.fillStyle = C.dark;
-  const slats = 13, gx = w * 0.07, gw = w * 0.42, gy = h * 0.16, gh = h * 0.68;
-  for (let i = 0; i < slats; i++)
-    fillRR(ctx, gx, gy + (i * gh) / slats, gw, (gh / slats) * 0.55, 1, C.dark);
-  // tuning scale, right — vertical, red needle
-  const sx = w * 0.58, sw = w * 0.34, sy = h * 0.16;
-  fillRR(ctx, sx, sy, sw, h * 0.5, 3, C.white, C.hairline);
-  ctx.strokeStyle = C.case;
+  rr(ctx, w * 0.05, h - 6, w * 0.9, 6, 3);
+  ctx.fillStyle = C.graphite;
+  ctx.fill();
+  body3D(ctx, 0, 0, w, h - 4, 8);
+  // tuning window, full width
+  inset(ctx, w * 0.08, h * 0.1, w * 0.84, h * 0.2, 4, C.white);
+  ctx.strokeStyle = C.hairline;
   ctx.lineWidth = 1;
-  for (let i = 1; i < 6; i++) {
+  for (let i = 1; i < 14; i++) {
+    const tx = w * 0.1 + (i * w * 0.8) / 14;
     ctx.beginPath();
-    ctx.moveTo(sx + 4, sy + (i * h * 0.5) / 6);
-    ctx.lineTo(sx + sw - 4, sy + (i * h * 0.5) / 6);
+    ctx.moveTo(tx, h * 0.13);
+    ctx.lineTo(tx, i % 2 ? h * 0.2 : h * 0.26);
     ctx.stroke();
   }
-  ctx.strokeStyle = "#c33";
+  ctx.strokeStyle = C.orange;
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  ctx.moveTo(sx + 3, sy + h * 0.21);
-  ctx.lineTo(sx + sw - 3, sy + h * 0.21);
+  ctx.moveTo(w * 0.62, h * 0.11);
+  ctx.lineTo(w * 0.62, h * 0.29);
   ctx.stroke();
-  // knob row + one orange
-  dot(ctx, sx + sw * 0.2, h * 0.82, 4.5, C.white);
-  ctx.strokeStyle = C.hairline;
-  ctx.beginPath();
-  ctx.arc(sx + sw * 0.2, h * 0.82, 4.5, 0, Math.PI * 2);
-  ctx.stroke();
-  dot(ctx, sx + sw * 0.6, h * 0.82, 4.5, C.orange);
+  // slat vents across the lower body
+  const gy = h * 0.4, gh = h * 0.42, slats = 9;
+  for (let i = 0; i < slats; i++) {
+    const sy = gy + (i * gh) / slats;
+    rr(ctx, w * 0.08, sy, w * 0.84, (gh / slats) * 0.5, 2);
+    const g = ctx.createLinearGradient(0, sy, 0, sy + (gh / slats) * 0.5);
+    g.addColorStop(0, C.darkLo);
+    g.addColorStop(1, "#3d4045");
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+  // knobs
+  knob3D(ctx, w * 0.2, h * 0.91, 5, C.white);
+  orange3D(ctx, w * 0.8, h * 0.91, 5);
 };
 
-/** RM-07 Dreh — record player (low console, platter on visible top plane) */
+/** T7 Dreh — a turntable console, foreshortened platter, acrylic sheen */
 const dreh: Drawer = (ctx, w, h) => {
-  // body
-  fillRR(ctx, 0, h * 0.42, w, h * 0.55, 5, C.body, C.hairline);
-  // top plane (raised camera): acrylic-lidded deck
-  fillRR(ctx, w * 0.02, 0, w * 0.96, h * 0.5, 6, C.bodyDark, C.hairline);
-  // platter
+  body3D(ctx, 0, h * 0.42, w, h * 0.56, 6);
+  // deck (top plane)
+  body3D(ctx, w * 0.02, 0, w * 0.96, h * 0.5, 7, "#f2f3f5", C.panel, "#cfd2d8");
   const px = w * 0.38, py = h * 0.25;
   ctx.save();
   ctx.translate(px, py);
-  ctx.scale(1, 0.55); // foreshortened circle
-  dot(ctx, 0, 0, w * 0.26, C.dark);
-  dot(ctx, 0, 0, w * 0.09, C.orange); // record label
-  dot(ctx, 0, 0, w * 0.012, C.ink);
+  ctx.scale(1, 0.55);
+  const pg = ctx.createRadialGradient(-w * 0.06, -w * 0.06, w * 0.03, 0, 0, w * 0.27);
+  pg.addColorStop(0, "#43474c");
+  pg.addColorStop(0.7, C.dark);
+  pg.addColorStop(1, C.darkLo);
+  dot(ctx, 0, 0, w * 0.26, "#000");
+  ctx.fillStyle = pg;
+  ctx.beginPath();
+  ctx.arc(0, 0, w * 0.26, 0, Math.PI * 2);
+  ctx.fill();
+  // grooves
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  for (let r = w * 0.1; r < w * 0.24; r += 3) {
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  orange3D(ctx, 0, 0, w * 0.085);
   ctx.restore();
   // tonearm
   ctx.strokeStyle = C.steelDark;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(w * 0.82, h * 0.08);
   ctx.lineTo(w * 0.62, h * 0.3);
   ctx.stroke();
-  dot(ctx, w * 0.82, h * 0.08, 3.5, C.steel);
-  // acrylic lid hint
-  ctx.strokeStyle = "rgba(255,255,255,0.55)";
-  ctx.lineWidth = 1;
-  rr(ctx, w * 0.04, 2, w * 0.92, h * 0.46, 5);
-  ctx.stroke();
-  // fascia: two knobs + vent
-  dot(ctx, w * 0.82, h * 0.7, 4, C.white);
-  ctx.strokeStyle = C.hairline;
-  ctx.beginPath();
-  ctx.arc(w * 0.82, h * 0.7, 4, 0, Math.PI * 2);
-  ctx.stroke();
-  dot(ctx, w * 0.91, h * 0.7, 4, C.white);
-  ctx.beginPath();
-  ctx.arc(w * 0.91, h * 0.7, 4, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = C.case;
-  for (let i = 0; i < 6; i++) fillRR(ctx, w * 0.07 + i * 7, h * 0.66, 4, 8, 1, C.case);
+  knob3D(ctx, w * 0.82, h * 0.08, 4, C.steel);
+  // acrylic lid sheen
+  const lid = ctx.createLinearGradient(0, 0, w * 0.5, h * 0.5);
+  lid.addColorStop(0, "rgba(255,255,255,0.35)");
+  lid.addColorStop(0.4, "rgba(255,255,255,0.05)");
+  lid.addColorStop(1, "rgba(255,255,255,0)");
+  rr(ctx, w * 0.04, 2, w * 0.92, h * 0.46, 6);
+  ctx.fillStyle = lid;
+  ctx.fill();
+  // fascia controls
+  knob3D(ctx, w * 0.82, h * 0.72, 4.5, C.white);
+  knob3D(ctx, w * 0.91, h * 0.72, 4.5, C.white);
+  for (let i = 0; i < 6; i++) {
+    rr(ctx, w * 0.07 + i * 7, h * 0.66, 4, 9, 2);
+    ctx.fillStyle = C.case;
+    ctx.fill();
+  }
 };
 
-/** RM-08 Bild — portable television */
+/** T8 Bild — a cube monitor on a stub foot */
 const bild: Drawer = (ctx, w, h) => {
   // antenna nub
-  fillRR(ctx, w * 0.46, 0, w * 0.08, 6, 2, C.case);
-  fillRR(ctx, 0, 4, w, h - 4, w * 0.16, C.body, C.hairline);
-  // screen
-  const sx = w * 0.1, sy = h * 0.09, sw = w * 0.8, sh = h * 0.66;
-  fillRR(ctx, sx, sy, sw, sh, w * 0.09, C.screen);
-  // scanline sheen
-  const grad = ctx.createLinearGradient(sx, sy, sx + sw, sy + sh);
-  grad.addColorStop(0, "rgba(255,255,255,0.14)");
-  grad.addColorStop(0.45, "rgba(255,255,255,0)");
-  ctx.fillStyle = grad;
-  rr(ctx, sx, sy, sw, sh, w * 0.09);
+  rr(ctx, w * 0.45, 0, w * 0.1, 7, 3);
+  ctx.fillStyle = C.case;
   ctx.fill();
-  // grille dots along bottom lip
-  holes(ctx, w * 0.16, h * 0.85, 10, 2, w * 0.07, 1.6);
-  // orange channel knob
-  dot(ctx, w * 0.88, h * 0.87, 5, C.orange);
+  body3D(ctx, 0, 5, w, h - 12, w * 0.15);
+  // screen: dark glass with curved sheen
+  const sx = w * 0.1, sy = h * 0.1, sw = w * 0.8, sh = h * 0.62;
+  inset(ctx, sx, sy, sw, sh, w * 0.08, C.screen);
+  const sheen = ctx.createRadialGradient(sx + sw * 0.3, sy + sh * 0.2, 4, sx + sw * 0.35, sy + sh * 0.3, sw * 0.75);
+  sheen.addColorStop(0, "rgba(255,255,255,0.22)");
+  sheen.addColorStop(0.5, "rgba(255,255,255,0.03)");
+  sheen.addColorStop(1, "rgba(255,255,255,0)");
+  rr(ctx, sx, sy, sw, sh, w * 0.08);
+  ctx.fillStyle = sheen;
+  ctx.fill();
+  // grille + channel knob
+  holes(ctx, w * 0.18, h * 0.82, 9, 2, w * 0.07, 1.6);
+  orange3D(ctx, w * 0.87, h * 0.845, 5.5);
+  // feet
+  rr(ctx, w * 0.2, h - 6, w * 0.14, 6, 3);
+  rr(ctx, w * 0.66, h - 6, w * 0.14, 6, 3);
+  ctx.fillStyle = C.graphite;
+  ctx.fill();
 };
 
-/** RM-09 System — modular hi-fi stack */
+/** T9 System — a brushed-steel component stack */
 const system: Drawer = (ctx, w, h) => {
-  const mh = (h - 8) / 3;
-  const brushed = (y: number) => {
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  const mh = (h - 10) / 3;
+  const drawModule = (y: number) => {
+    const g = ctx.createLinearGradient(0, y, 0, y + mh);
+    g.addColorStop(0, "#c4ced5");
+    g.addColorStop(0.12, C.steel);
+    g.addColorStop(0.9, C.steel);
+    g.addColorStop(1, "#93a0a9");
+    rr(ctx, 0, y, w, mh, 6);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(35,37,40,0.25)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // brushed texture
+    ctx.strokeStyle = "rgba(255,255,255,0.22)";
     ctx.lineWidth = 0.5;
-    for (let i = 1; i < 6; i++) {
+    for (let i = 1; i < 7; i++) {
       ctx.beginPath();
-      ctx.moveTo(6, y + (i * mh) / 6);
-      ctx.lineTo(w - 6, y + (i * mh) / 6);
+      ctx.moveTo(5, y + (i * mh) / 7);
+      ctx.lineTo(w - 5, y + (i * mh) / 7);
       ctx.stroke();
     }
   };
-  // module 1: reel-to-reel
-  fillRR(ctx, 0, 0, w, mh, 5, C.steel, C.steelDark);
-  brushed(0);
-  dot(ctx, w * 0.3, mh / 2, mh * 0.34, C.white);
-  dot(ctx, w * 0.7, mh / 2, mh * 0.34, C.white);
-  dot(ctx, w * 0.3, mh / 2, mh * 0.12, C.graphite);
-  dot(ctx, w * 0.7, mh / 2, mh * 0.12, C.graphite);
-  dot(ctx, w * 0.92, mh * 0.2, 3.5, C.orange); // record dot
-  // module 2: amplifier
-  fillRR(ctx, 0, mh + 4, w, mh, 5, C.steel, C.steelDark);
-  brushed(mh + 4);
-  for (let i = 0; i < 4; i++) {
-    dot(ctx, w * (0.2 + i * 0.2), mh + 4 + mh / 2, mh * 0.16, C.white);
-    ctx.strokeStyle = C.steelDark;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(w * (0.2 + i * 0.2), mh + 4 + mh / 2, mh * 0.16, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  // module 3: tuner
-  fillRR(ctx, 0, (mh + 4) * 2, w, mh, 5, C.steel, C.steelDark);
-  brushed((mh + 4) * 2);
-  fillRR(ctx, w * 0.1, (mh + 4) * 2 + mh * 0.3, w * 0.8, mh * 0.18, 2, C.white, C.steelDark);
-  ctx.strokeStyle = "#c33";
+  drawModule(0);
+  knob3D(ctx, w * 0.3, mh / 2, mh * 0.32, C.white);
+  knob3D(ctx, w * 0.7, mh / 2, mh * 0.32, C.white);
+  dot(ctx, w * 0.3, mh / 2, mh * 0.1, C.graphite);
+  dot(ctx, w * 0.7, mh / 2, mh * 0.1, C.graphite);
+  orange3D(ctx, w * 0.92, mh * 0.22, 4);
+  drawModule(mh + 5);
+  for (let i = 0; i < 4; i++) knob3D(ctx, w * (0.2 + i * 0.2), mh + 5 + mh / 2, mh * 0.16, C.white);
+  drawModule((mh + 5) * 2);
+  inset(ctx, w * 0.1, (mh + 5) * 2 + mh * 0.28, w * 0.8, mh * 0.2, 3, C.white);
+  ctx.strokeStyle = C.orange;
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  ctx.moveTo(w * 0.62, (mh + 4) * 2 + mh * 0.28);
-  ctx.lineTo(w * 0.62, (mh + 4) * 2 + mh * 0.5);
+  ctx.moveTo(w * 0.62, (mh + 5) * 2 + mh * 0.26);
+  ctx.lineTo(w * 0.62, (mh + 5) * 2 + mh * 0.5);
   ctx.stroke();
-  ctx.fillStyle = C.graphite;
-  for (let i = 0; i < 5; i++) fillRR(ctx, w * (0.15 + i * 0.15), (mh + 4) * 2 + mh * 0.62, w * 0.08, mh * 0.14, 2, C.graphite);
+  for (let i = 0; i < 5; i++) {
+    rr(ctx, w * (0.15 + i * 0.15), (mh + 5) * 2 + mh * 0.62, w * 0.08, mh * 0.15, 3);
+    ctx.fillStyle = C.graphite;
+    ctx.fill();
+  }
 };
 
-/** RM-10 Regal — modular sideboard on hairpin legs */
+/** T10 Regal — a low sideboard, grey laminate, steel hairpin legs */
 const regal: Drawer = (ctx, w, h) => {
   const bodyH = h * 0.72;
-  // hairpin legs
   ctx.strokeStyle = C.graphite;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
   for (const lx of [w * 0.1, w * 0.88]) {
     ctx.beginPath();
     ctx.moveTo(lx - 4, bodyH);
@@ -416,31 +517,36 @@ const regal: Drawer = (ctx, w, h) => {
     ctx.lineTo(lx + 2, h);
     ctx.stroke();
   }
-  // carcass: oak sides, white front
-  fillRR(ctx, 0, 0, w, bodyH, 6, C.oak);
-  fillRR(ctx, w * 0.03, 3, w * 0.94, bodyH - 6, 4, C.white, C.hairline);
-  // three flush doors
+  // grey carcass + white lacquer front
+  body3D(ctx, 0, 0, w, bodyH, 7, "#c9cdd3", C.grey, "#9ba0a8");
+  body3D(ctx, w * 0.03, 3, w * 0.94, bodyH - 7, 5, "#fdfdfe", C.white, "#e2e4e8");
   const dw = (w * 0.94) / 3;
-  ctx.strokeStyle = C.hairline;
+  ctx.strokeStyle = "rgba(35,37,40,0.14)";
   ctx.lineWidth = 1;
   for (let i = 1; i < 3; i++) {
     ctx.beginPath();
-    ctx.moveTo(w * 0.03 + dw * i, 6);
-    ctx.lineTo(w * 0.03 + dw * i, bodyH - 6);
+    ctx.moveTo(w * 0.03 + dw * i, 7);
+    ctx.lineTo(w * 0.03 + dw * i, bodyH - 7);
     ctx.stroke();
   }
-  // door 1: radio grille
-  holes(ctx, w * 0.09, bodyH * 0.25, 6, 4, dw * 0.12, 1.6, C.case);
-  // door 2: turntable well
+  holes(ctx, w * 0.09, bodyH * 0.28, 6, 4, dw * 0.12, 1.6);
+  // turntable well
   ctx.save();
   ctx.translate(w * 0.5, bodyH * 0.48);
   ctx.scale(1, 0.5);
-  dot(ctx, 0, 0, dw * 0.3, C.bodyDark);
+  const wg = ctx.createRadialGradient(-6, -6, 3, 0, 0, dw * 0.32);
+  wg.addColorStop(0, "#e7e9ec");
+  wg.addColorStop(1, C.case);
+  ctx.fillStyle = wg;
+  ctx.beginPath();
+  ctx.arc(0, 0, dw * 0.3, 0, Math.PI * 2);
+  ctx.fill();
   dot(ctx, 0, 0, dw * 0.1, C.dark);
   ctx.restore();
-  // door 3: blank storage with tiny handle
-  fillRR(ctx, w * 0.87, bodyH * 0.45, w * 0.05, 3, 1.5, C.case);
-  // the orange cable spiral, leftmost door
+  // handle + orange cable spiral
+  rr(ctx, w * 0.87, bodyH * 0.45, w * 0.05, 3.5, 1.75);
+  ctx.fillStyle = C.case;
+  ctx.fill();
   ctx.strokeStyle = C.orange;
   ctx.lineWidth = 1.8;
   ctx.beginPath();
@@ -453,19 +559,22 @@ const regal: Drawer = (ctx, w, h) => {
   ctx.stroke();
 };
 
-/** RM-11 Monolith — the thesis */
+/** T11 Monolith — the thesis: a ceramic disc, one orange dot */
 const monolith: Drawer = (ctx, w, h) => {
   const r = Math.min(w, h) / 2 - 2;
   const cx = w / 2, cy = h / 2;
-  // plinth-thin edge
-  dot(ctx, cx, cy, r, C.white);
-  ctx.strokeStyle = C.hairline;
-  ctx.lineWidth = 1.5;
+  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.1, cx, cy, r * 1.15);
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(0.6, C.white);
+  g.addColorStop(1, "#d8dade");
   ctx.beginPath();
-  ctx.arc(cx, cy, r - 0.75, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(35,37,40,0.18)";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
-  // the single orange dot
-  dot(ctx, cx, cy, 12, C.orange);
+  orange3D(ctx, cx, cy, 13);
 };
 
 const DRAWERS: Drawer[] = [punkt, funk, notiz, zahl, klang, welle, dreh, bild, system, regal, monolith];

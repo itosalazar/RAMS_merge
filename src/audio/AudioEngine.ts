@@ -269,82 +269,123 @@ export class AudioEngine {
     trem.stop(t0 + 1.6);
   }
 
-  /* ── generative music ─────────────────────────────────────────── */
+  /* ── generative music: light electronic piano, slow jazz ─────────── */
 
-  /** 54 BPM, four layers, state-mixed (GDD §11). */
+  /** A soft e-piano note — sine stack with tremolo and a felt attack. */
+  private ePiano(freq: number, t0: number, dur: number, vel: number): void {
+    if (!this.ctx) return;
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 2400;
+    lp.connect(this.musicGain);
+    const trem = this.ctx.createOscillator();
+    trem.frequency.value = 4.6;
+    const tremDepth = this.ctx.createGain();
+    tremDepth.gain.value = vel * 0.22;
+    trem.connect(tremDepth);
+    for (const [mult, amt] of [
+      [1, 1],
+      [2, 0.28],
+      [4, 0.07],
+    ] as const) {
+      const o = this.ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.value = freq * mult;
+      o.detune.value = (Math.random() - 0.5) * 4;
+      const g = this.ctx.createGain();
+      this.env(g, t0, vel * amt, 0.006, dur);
+      if (mult === 1) tremDepth.connect(g.gain);
+      o.connect(g).connect(lp);
+      o.start(t0);
+      o.stop(t0 + dur + 0.3);
+    }
+    // hammer tick
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noiseBuffer();
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 1800;
+    bp.Q.value = 2;
+    const g = this.ctx.createGain();
+    this.env(g, t0, vel * 0.1, 0.001, 0.03);
+    src.connect(bp).connect(g).connect(this.musicGain);
+    src.start(t0);
+    src.stop(t0 + 0.08);
+    trem.start(t0);
+    trem.stop(t0 + dur + 0.3);
+  }
+
+  /** ~66 BPM ii–V–I–vi, swung brushes, sparse pentatonic melody. */
   startMusic(intensity: "zen" | "focus" | "speed" = "focus"): void {
     if (!this.ctx || !this.musicOn || this.musicTimer) return;
-    const beatMs = 60000 / 54;
+    const beatS = 60 / 66;
+    const C3 = C4 / 2;
+    const C2 = C4 / 4;
+    // Dm9 → G13 → Cmaj9 → Am9 (voicings in semitones over C3; bass over C2)
+    const CHORDS: { notes: number[]; bass: number }[] = [
+      { notes: [14, 17, 21, 24], bass: 14 },
+      { notes: [11, 17, 21, 26], bass: 7 },
+      { notes: [16, 19, 23, 26], bass: 12 },
+      { notes: [12, 16, 19, 23], bass: 9 },
+    ];
+    const PENTA = [24, 26, 28, 31, 33, 36]; // melody range, over C3
     this.musicStep = 0;
+
     this.musicTimer = setInterval(() => {
       if (!this.ctx || this.ctx.state !== "running") return;
-      const t0 = this.t + 0.05;
-      const step = this.musicStep++;
+      const t0 = this.t + 0.06;
+      const beat = this.musicStep++;
+      const bar = Math.floor(beat / 4) % 4;
+      const inBar = beat % 4;
+      const chord = CHORDS[bar];
 
-      // layer: sub pulse every beat (skipped in zen every other)
-      if (intensity !== "zen" || step % 2 === 0) {
+      // comping: chord on beat 1, soft push on the swung "and" of 2
+      if (inBar === 0) {
+        chord.notes.forEach((s, i) =>
+          this.ePiano(C3 * Math.pow(2, s / 12), t0 + i * 0.012, beatS * 3.2, 0.055)
+        );
+      }
+      if (inBar === 2 && intensity !== "zen" && Math.random() < 0.5) {
+        chord.notes.slice(1).forEach((s, i) =>
+          this.ePiano(C3 * Math.pow(2, s / 12), t0 + beatS * 0.66 + i * 0.01, beatS * 1.2, 0.03)
+        );
+      }
+
+      // bass: root on 1, fifth on 3 — round and quiet
+      if (inBar === 0 || inBar === 2) {
+        const s = inBar === 0 ? chord.bass : chord.bass + 7;
         const o = this.ctx.createOscillator();
         o.type = "sine";
-        o.frequency.value = 54.6;
+        o.frequency.value = C2 * Math.pow(2, s / 12);
         const g = this.ctx.createGain();
-        this.env(g, t0, intensity === "speed" ? 0.16 : 0.1, 0.02, 0.35);
+        this.env(g, t0, 0.11, 0.015, beatS * 1.6);
         o.connect(g).connect(this.musicGain);
         o.start(t0);
-        o.stop(t0 + 0.5);
+        o.stop(t0 + beatS * 2);
       }
 
-      // layer: warm pad chord every 8 beats (zen & focus)
-      if (intensity !== "speed" && step % 8 === 0) {
-        const roots = [0, 5, 7, 3];
-        const root = C4 / 2 / 2; // C2 region... keep low & warm
-        const base = root * Math.pow(2, roots[(step / 8) % 4] / 12) * 2;
-        for (const iv of [0, 7, 12]) {
-          const o = this.ctx.createOscillator();
-          o.type = "triangle";
-          o.frequency.value = base * Math.pow(2, iv / 12);
-          o.detune.value = (Math.random() - 0.5) * 8;
-          const lp = this.ctx.createBiquadFilter();
-          lp.type = "lowpass";
-          lp.frequency.value = 900;
-          const g = this.ctx.createGain();
-          this.env(g, t0, 0.045, 2.2, beatMs / 1000 * 5);
-          o.connect(lp).connect(g).connect(this.musicGain);
-          o.start(t0);
-          o.stop(t0 + beatMs / 1000 * 8);
-        }
-      }
-
-      // layer: sparse Rhodes-like dyad, occasionally
-      if (step % 4 === 2 && Math.random() < (intensity === "zen" ? 0.5 : 0.3)) {
-        const degrees = [0, 2, 4, 7, 9];
-        const d = degrees[Math.floor(Math.random() * degrees.length)];
-        const f = C4 * Math.pow(2, d / 12);
-        for (const mult of [1, 1.5]) {
-          const o = this.ctx.createOscillator();
-          o.type = "sine";
-          o.frequency.value = f * mult;
-          const g = this.ctx.createGain();
-          this.env(g, t0 + 0.02, 0.05, 0.01, 1.8);
-          o.connect(g).connect(this.musicGain);
-          o.start(t0);
-          o.stop(t0 + 2);
-        }
-      }
-
-      // layer: vinyl crackle room tone
-      if (Math.random() < 0.7) {
+      // brushes: soft swung hat on 2 and 4 (not in zen)
+      if (intensity !== "zen" && (inBar === 1 || inBar === 3)) {
         const src = this.ctx.createBufferSource();
         src.buffer = this.noiseBuffer();
         const hp = this.ctx.createBiquadFilter();
         hp.type = "highpass";
-        hp.frequency.value = 5000;
+        hp.frequency.value = 7000;
         const g = this.ctx.createGain();
-        this.env(g, t0 + Math.random() * (beatMs / 1000), 0.012, 0.001, 0.02);
+        this.env(g, t0, intensity === "speed" ? 0.03 : 0.018, 0.002, 0.09);
         src.connect(hp).connect(g).connect(this.musicGain);
         src.start(t0);
-        src.stop(t0 + 1);
+        src.stop(t0 + 0.2);
       }
-    }, beatMs);
+
+      // melody: a swung pentatonic phrase note, sparse
+      const mel = intensity === "zen" ? 0.18 : intensity === "speed" ? 0.45 : 0.3;
+      if (Math.random() < mel) {
+        const s = PENTA[Math.floor(Math.random() * PENTA.length)];
+        const swing = Math.random() < 0.5 ? 0 : beatS * 0.66;
+        this.ePiano(C3 * Math.pow(2, s / 12), t0 + swing, beatS * 1.4, 0.045);
+      }
+    }, beatS * 1000);
   }
 
   stopMusic(): void {

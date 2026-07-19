@@ -1,7 +1,7 @@
 # RAMS MERGE
 
 **A quiet celebration of industrial design.**
-A merge game on a designer's drafting table, built the way Braun would have built a digital toy: warm paper, one orange, honest physics, and a museum you earn by playing.
+A merge game on a designer's drafting table, built the way Braun would have built a digital toy: cool grey, one orange, honest physics, and a museum you earn by playing.
 
 > *Weniger, aber besser.* — Less, but better.
 
