@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RAMS MERGE
 
-## Getting Started
+**A quiet celebration of industrial design.**
+A merge game on a designer's drafting table, built the way Braun would have built a digital toy: warm paper, one orange, honest physics, and a museum you earn by playing.
 
-First, run the development server:
+> *Weniger, aber besser.* — Less, but better.
+
+---
+
+## What it is
+
+Slide fictional mid-century products across a drafting table seen in perspective. Two identical products that meet with intent merge into the next, larger object — eleven tiers, from the **RM-01 Punkt** pocket alarm clock (1962) to the **RM-11 Monolith**, a museum-scale disc with a single orange dot (2024).
+
+There are no coins and no gems. Progression is **knowledge**: every discovery files a museum card, a Rams principle, or a design-history note into your personal Archive — a growing exhibition of everything you've made.
+
+### Five modes
+
+| Mode | The idea |
+|---|---|
+| **Classic** | Merge endlessly. The bench is finite. |
+| **Time Attack** | One daily-seeded target product. Build it fast. |
+| **Speed Merge** | Every merge resets a shrinking clock. Survive. |
+| **Shrinking** | The table closes in; targets buy back space. |
+| **Zen** | No score, no timer. Just the work. |
+
+### The details that matter
+
+- **Honest physics** — Matter.js on a flat plane; the perspective is applied after simulation, so aiming is never distorted. Big products are genuinely ~18× heavier than small ones.
+- **Magnetic merges** — same-tier products attract gently; merges feel earned, then inevitable.
+- **Synthesized ASMR** — every impact is voiced by its material pair (plastic·wood ≠ metal·metal), merges snap up a pentatonic ladder, and the 54 BPM ambient score is generated, not looped. The whole soundtrack is code.
+- **Rams Moments** — a tiny monochrome pixel mentor appears on great plays and calmly delivers one of the Ten Principles of Good Design.
+- **Nothing expires** — everything is stored on-device. No accounts, no tracking, no currency.
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # engine + content tests (vitest)
+npm run typecheck  # strict TypeScript
+npm run build      # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Installable as a PWA; plays offline after the first visit.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js (App Router) · TypeScript strict · Tailwind CSS 4 · Matter.js · Framer Motion (chrome only — never in the 60 fps loop) · Web Audio API · zustand · a hand-rolled service worker.
 
-## Learn More
+The game core (`src/engine/`) is framework-free: one canvas, a fixed 60 Hz timestep, pre-rendered vector sprites, and a typed event bus to React. Adding a product family is a data change, not a code change (`src/data/products.ts`).
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Push to GitHub, import into [Vercel](https://vercel.com) — zero configuration. Every route is static; there is no server runtime.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Design
 
-## Deploy on Vercel
+The full Game Design Document lives at [docs/GDD.md](docs/GDD.md) — philosophy, evolution tree, color system, physics numbers, audio recipes, and the roadmap. The visual language is drawn from Dieter Rams' work at Braun and the Ulm School tradition: warm whites, hairline grids, museum typography (Hanken Grotesk), and **orange only where it matters**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Good design is as little design as possible.*

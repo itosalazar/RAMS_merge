@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rams-merge-dev",
+      "runtimeExecutable": "/Users/petitroncarlos/.local/node/bin/npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "/Volumes/MEDIA/CLAUDE_stuff/RAMS_merge/rams-merge"
+    }
+  ]
+}

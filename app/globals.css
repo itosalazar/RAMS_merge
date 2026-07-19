@@ -1,26 +1,104 @@
 @import "tailwindcss";
 
+/* ─── RAMS MERGE design tokens (GDD §6/§7) ─────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* core */
+  --paper: #f4f2ed;
+  --bench: #e8e4dc;
+  --case: #d9d2c6;
+  --grid: #d3ccc0;
+  --steel: #aab7bf;
+  --taupe: #736356;
+  --graphite: #4d4d4d;
+  --ink: #261201;
+
+  /* accent */
+  --orange: #ed8008;
+  --orange-deep: #ea5b0c;
+  --signal-red: #ad1d1d;
+  --olive: #736b1e;
+
+  /* shadows */
+  --shadow-contact: 0 1px 2px rgba(38, 18, 1, 0.1);
+  --shadow-raised: 0 4px 16px rgba(38, 18, 1, 0.08);
+}
+
+[data-theme="night"] {
+  --paper: #1c1a17;
+  --bench: #242220;
+  --case: #3a3630;
+  --grid: #322f2a;
+  --graphite: #b8b2a6;
+  --ink: #edeae3;
+  --shadow-contact: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-bench: var(--bench);
+  --color-case: var(--case);
+  --color-grid: var(--grid);
+  --color-steel: var(--steel);
+  --color-taupe: var(--taupe);
+  --color-graphite: var(--graphite);
+  --color-ink: var(--ink);
+  --color-orange: var(--orange);
+  --color-orange-deep: var(--orange-deep);
+  --color-signal: var(--signal-red);
+  --color-olive: var(--olive);
+  --font-sans: var(--font-hanken);
+  --shadow-contact: var(--shadow-contact);
+  --shadow-raised: var(--shadow-raised);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-hanken), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* museum-card prose is selectable */
+.selectable,
+.selectable * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* dot-matrix numeral treatment (GDD §7) — a material, not a font */
+.dot-matrix {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* hairline utility */
+.hairline {
+  border: 1px solid var(--case);
+}
+
+/* hide scrollbars on gallery rails, keep scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
