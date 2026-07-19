@@ -187,6 +187,17 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
+/** Global product scale (creative direction: +50%, 2026-07-19). */
+const SIZE_SCALE = 1.5;
+for (const p of PRODUCTS) {
+  if (p.footprint.kind === "circle") p.footprint.r *= SIZE_SCALE;
+  else {
+    p.footprint.w *= SIZE_SCALE;
+    p.footprint.h *= SIZE_SCALE;
+  }
+  p.spriteH *= SIZE_SCALE;
+}
+
 export const productForTier = (tier: number): Product => PRODUCTS[tier - 1];
 
 export const MAX_TIER = PRODUCTS.length;

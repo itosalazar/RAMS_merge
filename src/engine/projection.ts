@@ -27,7 +27,7 @@ export function computeViewport(cw: number, ch: number): Viewport {
   const unit = (nearHalfW * 2) / TABLE_W;
 
   const farY = ch * 0.14; // room for HUD above the far rail
-  const nearY = ch * 0.9; // staging tray lives below
+  const nearY = ch * 0.82; // the arrow tray lives below, never touching the board
 
   return { cw, ch, nearY, farY, nearHalfW, farHalfW, cx: cw / 2, unit };
 }

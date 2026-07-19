@@ -86,7 +86,8 @@ export class GameEngine {
   private rand: () => number;
 
   staged: StagedProduct | null = null;
-  nextTier = 1;
+  /** upcoming products, [0] is thrown next — feeds the arrow tray */
+  queue: number[] = [];
   aim: AimState = { active: false, dirX: 0, dirY: -1, power: 0 };
 
   stats: RunStats = { score: 0, merges: 0, largestTier: 0, startedAt: 0, targetsHit: 0 };
@@ -215,10 +216,11 @@ export class GameEngine {
   }
 
   private stage(): void {
-    const tier = this.nextTier || this.rollTier();
-    this.nextTier = this.rollTier();
+    while (this.queue.length < 4) this.queue.push(this.rollTier());
+    const tier = this.queue.shift()!;
+    this.queue.push(this.rollTier());
     this.staged = { tier, x: TABLE_W / 2 };
-    this.events.emit("staged", { tier, nextTier: this.nextTier });
+    this.events.emit("staged", { tier, nextTier: this.queue[0], queue: [...this.queue] });
   }
 
   moveStaged(x: number): void {
@@ -257,7 +259,6 @@ export class GameEngine {
     const body = this.createBody(tier, this.staged.x, TABLE_D - LAUNCH_ZONE_D - r - 4, now);
     const v = LAUNCH_V_MIN + (LAUNCH_V_MAX - LAUNCH_V_MIN) * this.aim.power;
     Body.setVelocity(body, { x: this.aim.dirX * v, y: this.aim.dirY * v });
-    Body.setAngularVelocity(body, (this.rand() - 0.5) * 0.15);
     Composite.add(this.world, body);
     if (process.env.NODE_ENV !== "production") console.log("[engine] launch tier", tier, "bodies:", this.productBodies().length);
     this.events.emit("launch", { tier });
@@ -287,6 +288,8 @@ export class GameEngine {
           });
     // every object weighs the same — a clock can shove a sideboard
     Body.setMass(body, UNIFORM_MASS);
+    // objects never rotate: catalogue photography stays straight
+    Body.setInertia(body, Infinity);
     this.meta.set(body.id, { tier, bornAt: now, hitAt: 0, hitMag: 0, restContacts: new Map() });
     return body;
   }
@@ -396,7 +399,6 @@ export class GameEngine {
     const body = this.createBody(newTier, mx, my, now);
     if (process.env.NODE_ENV !== "production") console.log("[engine] merge →", newTier, "bodies:", this.productBodies().length);
     Body.setVelocity(body, { x: vx, y: vy });
-    Body.setAngularVelocity(body, (this.rand() - 0.5) * 0.5);
     Composite.add(this.world, body);
 
     // combo

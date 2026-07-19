@@ -295,13 +295,8 @@ export class Renderer {
       const fr = footprintRadius(p.footprint);
       this.softShadow(proj.sx, proj.sy, fr * proj.scale);
 
-      // sprite, anchored at base, subtle physical rotation
-      const rot = clampAngle(body.angle) * 0.25;
-      ctx.save();
-      ctx.translate(proj.sx, proj.sy + fr * proj.scale * 0.18);
-      ctx.rotate(Math.max(-0.16, Math.min(0.16, rot)));
-      ctx.drawImage(cv, -w / 2, -h, w, h);
-      ctx.restore();
+      // sprite, anchored at base — always straight, like catalogue photography
+      ctx.drawImage(cv, proj.sx - w / 2, proj.sy + fr * proj.scale * 0.18 - h, w, h);
     }
   }
 
@@ -399,13 +394,6 @@ export class Renderer {
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
-}
-
-function clampAngle(a: number): number {
-  let r = a % (Math.PI * 2);
-  if (r > Math.PI) r -= Math.PI * 2;
-  if (r < -Math.PI) r += Math.PI * 2;
-  return r;
 }
 
 export { spriteWidth };

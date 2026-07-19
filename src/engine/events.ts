@@ -22,7 +22,7 @@ export interface EngineEvents {
   newTarget: { tier: number };
   launch: { tier: number };
   impact: { energy: number; tierA: number; tierB: number };
-  staged: { tier: number; nextTier: number };
+  staged: { tier: number; nextTier: number; queue: number[] };
 }
 
 type Handler<T> = (payload: T) => void;

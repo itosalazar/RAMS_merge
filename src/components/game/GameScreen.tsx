@@ -46,7 +46,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
 
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [nextTier, setNextTier] = useState(1);
+  const [queue, setQueue] = useState<number[]>([]);
   const [target, setTarget] = useState(0);
   const [targetsHit, setTargetsHit] = useState(0);
   const [elapsedS, setElapsedS] = useState(0);
@@ -91,7 +91,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
 
     const offs = [
       engine.events.on("score", ({ score }) => setScore(score)),
-      engine.events.on("staged", ({ nextTier }) => setNextTier(nextTier)),
+      engine.events.on("staged", ({ queue }) => setQueue(queue)),
       engine.events.on("launch", () => {
         audio.launch();
         meta.getState().addLaunch();
@@ -299,14 +299,16 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         className="relative z-20 grid grid-cols-[1fr_auto_1fr] items-start px-4 pt-3"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
-        {/* left: target chip / countdown */}
+        {/* left: target (orange box) / countdown (LED) */}
         <div className="flex items-center justify-start">
           {(mode === "time-attack" || mode === "shrinking") && target > 0 && (
-            <div className="flex items-center gap-2 bg-board border border-case rounded-full px-3 py-1.5 shadow-contact">
-              <ProductThumb tier={target} size={30} />
-              <div>
-                <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70">TARGET</p>
-                <p className="text-[11px] font-semibold text-ink">
+            <div className="flex items-center gap-2 rounded-xl px-2 py-1.5 shadow-knob bg-[linear-gradient(180deg,#ffa63e_0%,#ed8008_45%,#e06c06_100%)]">
+              <span className="bg-paper rounded-lg p-0.5 shadow-contact">
+                <ProductThumb tier={target} size={30} />
+              </span>
+              <div className="pr-1">
+                <p className="text-[9px] font-semibold tracking-[0.12em] text-paper/85">TARGET</p>
+                <p className="text-[11px] font-bold text-paper">
                   {productForTier(target).model}
                   {mode === "shrinking" && targetsHit > 0 ? ` · ${targetsHit}` : ""}
                 </p>
@@ -314,26 +316,19 @@ export function GameScreen({ mode }: { mode: GameMode }) {
             </div>
           )}
           {mode === "speed-merge" && remainingS !== null && (
-            <p
-              className={`dot-matrix text-3xl ${remainingS < 3 ? "text-orange-deep" : "text-ink"}`}
-              aria-label="time remaining"
-            >
-              {remainingS.toFixed(1)}
-            </p>
+            <Led value={remainingS.toFixed(1)} urgent={remainingS < 3} />
           )}
         </div>
 
-        {/* center: the score */}
+        {/* center: the score / LED timer */}
         <div className="text-center">
-          <p className="text-[11px] font-medium tracking-[0.1em] text-graphite/70">{info.title}</p>
+          <p className="text-[11px] font-medium tracking-[0.1em] text-graphite/70 mb-0.5">{info.title}</p>
           {mode !== "zen" && mode !== "time-attack" && (
             <p className="dot-matrix text-3xl text-ink leading-tight" aria-label="score">
               {score.toLocaleString("en-US")}
             </p>
           )}
-          {mode === "time-attack" && (
-            <p className="dot-matrix text-3xl text-ink leading-tight">{fmtTime(elapsedS)}</p>
-          )}
+          {mode === "time-attack" && <Led value={fmtTime(elapsedS)} />}
           <AnimatePresence>
             {combo > 1 && (
               <motion.p
@@ -351,7 +346,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         <div className="flex items-start justify-end">
           <button
             aria-label={paused ? "resume" : "pause"}
-            className="w-11 h-11 rounded-full bg-board border border-case shadow-knob flex items-center justify-center active:translate-y-[1px]"
+            className="w-11 h-11 rounded-full shadow-knob-dark bg-[radial-gradient(circle_at_35%_28%,#6a6e75_0%,#55585e_45%,#3b3e43_100%)] flex items-center justify-center active:translate-y-[1px] text-orange"
             onClick={() => {
               const en = engineRef.current!;
               const p = !paused;
@@ -364,12 +359,12 @@ export function GameScreen({ mode }: { mode: GameMode }) {
           >
             {paused ? (
               <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden>
-                <path d="M1 1l10 6-10 6z" fill="var(--ink)" />
+                <path d="M1 1l10 6-10 6z" fill="currentColor" />
               </svg>
             ) : (
               <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden>
-                <rect x="1" y="1" width="3.5" height="12" fill="var(--ink)" />
-                <rect x="7.5" y="1" width="3.5" height="12" fill="var(--ink)" />
+                <rect x="1" y="1" width="3.5" height="12" fill="currentColor" />
+                <rect x="7.5" y="1" width="3.5" height="12" fill="currentColor" />
               </svg>
             )}
           </button>
@@ -386,24 +381,40 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         onPointerCancel={onPointerUp}
       />
 
-      {/* next product well */}
-      <div className="absolute right-4 bottom-6 z-20 flex flex-col items-center gap-1 pointer-events-none">
-        <p className="text-[9px] font-medium tracking-[0.12em] text-graphite/70">NEXT</p>
-        <div className="bg-board border border-case rounded-lg p-1.5 shadow-contact">
-          <ProductThumb tier={nextTier} size={40} />
+      {/* the feed: an arrow-shaped magazine of upcoming products —
+          the tip of the arrow holds what gets thrown next */}
+      <div
+        className="absolute inset-x-0 z-20 flex flex-col items-center gap-1 pointer-events-none"
+        style={{ bottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
+      >
+        <p className="text-[9px] font-semibold tracking-[0.14em] text-graphite/60">NEXT</p>
+        <div style={{ filter: "drop-shadow(0 3px 8px rgba(20,22,25,0.22))" }}>
+          <div
+            className="flex items-center gap-4 py-2 pr-6 bg-[linear-gradient(180deg,#fafbfc_0%,#e6e8eb_55%,#d5d8dd_100%)]"
+            style={{
+              clipPath: "polygon(0% 50%, 44px 0%, 100% 0%, 100% 100%, 44px 100%)",
+              paddingLeft: 22,
+            }}
+          >
+            {queue.slice(0, 3).map((t, i) => (
+              <div key={i} className={i === 0 ? "" : "opacity-65"}>
+                <ProductThumb tier={t} size={i === 0 ? 46 : 34} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <RamsToast text={rams?.text ?? null} nonce={rams?.nonce ?? 0} />
 
-      {/* pause sheet */}
+      {/* pause: a small product materializes at the center (ref: product_05) */}
       <AnimatePresence>
         {paused && !over && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-40 bg-ink/20 backdrop-blur-[2px] flex items-end"
+            className="absolute inset-0 z-40 bg-ink/25 backdrop-blur-[2px] flex items-center justify-center px-8"
             onClick={() => {
               engineRef.current!.setPaused(false);
               setPaused(false);
@@ -411,20 +422,29 @@ export function GameScreen({ mode }: { mode: GameMode }) {
             }}
           >
             <motion.div
-              initial={{ y: 80 }}
-              animate={{ y: 0 }}
-              exit={{ y: 120 }}
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              className="w-full bg-paper rounded-t-3xl p-6 pb-10"
+              initial={{ scale: 0.9, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="w-full max-w-70 rounded-[28px] p-6 pb-7 text-center bg-[linear-gradient(180deg,#fafbfc_0%,#eceded_50%,#dcdee2_100%)] shadow-raised border border-white/60"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-8 h-1 rounded-full bg-case mx-auto mb-6" />
-              <h2 className="text-xl font-bold tracking-tight mb-1">PAUSED</h2>
-              <p className="text-sm text-graphite mb-6">{info.caption}</p>
-              <div className="flex gap-3">
+              {/* speaker perforation */}
+              <div className="flex flex-col items-center gap-[5px] mb-5 pt-1" aria-hidden>
+                {[7, 9, 7].map((n, row) => (
+                  <div key={row} className="flex gap-[5px]">
+                    {Array.from({ length: n }, (_, i) => (
+                      <span key={i} className="w-1 h-1 rounded-full bg-graphite/50 shadow-[0_0.5px_0_rgba(255,255,255,0.8)]" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <h2 className="text-2xl font-extrabold tracking-tight">PAUSED</h2>
+              <p className="text-[13px] text-graphite mt-1 mb-6">{info.caption}</p>
+              <div className="flex flex-col gap-3">
                 <PushKey
                   variant="primary"
-                  className="flex-1"
+                  className="w-full"
                   onClick={() => {
                     engineRef.current!.setPaused(false);
                     setPaused(false);
@@ -433,10 +453,8 @@ export function GameScreen({ mode }: { mode: GameMode }) {
                 >
                   Resume
                 </PushKey>
-                <Link href="/" className="flex-1">
-                  <PushKey variant="ghost" className="w-full">
-                    Leave the board
-                  </PushKey>
+                <Link href="/" className="w-full">
+                  <PushKey className="w-full">Leave the board</PushKey>
                 </Link>
               </div>
             </motion.div>
@@ -492,6 +510,23 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/** A small LED display — dark glass, luminous digits (ref: product_06 clock). */
+function Led({ value, urgent = false }: { value: string; urgent?: boolean }) {
+  return (
+    <span
+      className="inline-block rounded-lg px-2.5 py-1 bg-[#1d1f22] shadow-[inset_0_2px_4px_rgba(0,0,0,0.6),0_1px_0_rgba(255,255,255,0.5)]"
+      aria-label="timer"
+    >
+      <span
+        className={`dot-matrix text-xl leading-none ${urgent ? "text-orange" : "text-[#a9bfa9]"}`}
+        style={{ textShadow: urgent ? "0 0 6px rgba(237,128,8,0.6)" : "0 0 6px rgba(169,191,169,0.45)" }}
+      >
+        {value}
+      </span>
+    </span>
   );
 }
 

@@ -14,10 +14,10 @@ export const FAR_SPRITE_SCALE = 0.82;
  * can shove a sideboard, and any launch can reach the far rail). */
 export const UNIFORM_MASS = 5;
 export const DENSITY_BASE = 0.0012; // pre-setMass placeholder density
-export const RESTITUTION = () => 0.5;
-export const FRICTION_AIR = () => 0.011; // low drag: full-board glide
+export const RESTITUTION = () => 0.4;
+export const FRICTION_AIR = () => 0.014; // +25% surface resistance
 export const SURFACE_FRICTION = 0.06;
-export const WALL_RESTITUTION = 0.7; // lively carom off the rails
+export const WALL_RESTITUTION = 0.5; // calmer carom off the rails
 
 /** Magnetic assist between same-tier pairs. */
 export const MAGNET_RANGE = 1.15;

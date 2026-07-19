@@ -47,34 +47,54 @@ function SpeakerField({ size }: { size: number }) {
     return out;
   }, [size]);
 
-  const [active, setActive] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerAt = useRef<{ x: number; y: number } | null>(null);
-  const raf = useRef(0);
+  const glow = useRef<Float32Array | null>(null);
 
   useEffect(() => {
-    // idle: the orange hole drifts in a slow orbit; a finger overrides it
+    // a wide orange glow blooms under the finger and fades away behind it;
+    // idle, it drifts in a slow orbit
     const c = size / 2;
+    const REACH = size * 0.19; // influence radius
+    const cv = canvasRef.current!;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    cv.width = size * dpr;
+    cv.height = size * dpr;
+    const ctx = cv.getContext("2d")!;
+    if (!glow.current || glow.current.length !== holes.length)
+      glow.current = new Float32Array(holes.length);
+    const g = glow.current;
+
+    const INK = [0x23, 0x25, 0x28];
+    const ORANGE = [0xed, 0x80, 0x08];
+
+    let raf = 0;
     const loop = (t: number) => {
       const target =
-        pointerAt.current ??
-        {
+        pointerAt.current ?? {
           x: c + Math.cos(t / 2400) * size * 0.36,
           y: c + Math.sin(t / 2400) * size * 0.36,
         };
-      let best = 0;
-      let bd = Infinity;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size, size);
       for (let i = 0; i < holes.length; i++) {
-        const d = (holes[i].x - target.x) ** 2 + (holes[i].y - target.y) ** 2;
-        if (d < bd) {
-          bd = d;
-          best = i;
-        }
+        const d = Math.hypot(holes[i].x - target.x, holes[i].y - target.y);
+        const near = Math.max(0, 1 - d / REACH);
+        // rise fast under the finger, fade slowly behind it
+        g[i] = Math.max(g[i] * 0.94, near * near);
+        const k = g[i];
+        const r = size * (0.009 + 0.004 * k);
+        ctx.fillStyle = `rgba(${Math.round(INK[0] + (ORANGE[0] - INK[0]) * k)},${Math.round(
+          INK[1] + (ORANGE[1] - INK[1]) * k
+        )},${Math.round(INK[2] + (ORANGE[2] - INK[2]) * k)},${0.82 + 0.18 * k})`;
+        ctx.beginPath();
+        ctx.arc(holes[i].x, holes[i].y, r, 0, Math.PI * 2);
+        ctx.fill();
       }
-      setActive((prev) => (prev === best ? prev : best));
-      raf.current = requestAnimationFrame(loop);
+      raf = requestAnimationFrame(loop);
     };
-    raf.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf.current);
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
   }, [holes, size]);
 
   return (
@@ -91,18 +111,7 @@ function SpeakerField({ size }: { size: number }) {
       }}
       onPointerLeave={() => (pointerAt.current = null)}
     >
-      <svg width={size} height={size} className="absolute inset-0" aria-hidden>
-        {holes.map((h, i) => (
-          <circle
-            key={i}
-            cx={h.x}
-            cy={h.y}
-            r={i === active ? size * 0.011 : size * 0.009}
-            fill={i === active ? "var(--orange)" : "var(--ink)"}
-            opacity={i === active ? 1 : 0.82}
-          />
-        ))}
-      </svg>
+      <canvas ref={canvasRef} className="absolute inset-0" style={{ width: size, height: size }} aria-hidden />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Logo size={Math.round(size * 0.16)} />
       </div>

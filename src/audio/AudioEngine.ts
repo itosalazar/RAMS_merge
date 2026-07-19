@@ -299,18 +299,6 @@ export class AudioEngine {
       o.start(t0);
       o.stop(t0 + dur + 0.3);
     }
-    // hammer tick
-    const src = this.ctx.createBufferSource();
-    src.buffer = this.noiseBuffer();
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.value = 1800;
-    bp.Q.value = 2;
-    const g = this.ctx.createGain();
-    this.env(g, t0, vel * 0.1, 0.001, 0.03);
-    src.connect(bp).connect(g).connect(this.musicGain);
-    src.start(t0);
-    src.stop(t0 + 0.08);
     trem.start(t0);
     trem.stop(t0 + dur + 0.3);
   }
@@ -362,20 +350,6 @@ export class AudioEngine {
         o.connect(g).connect(this.musicGain);
         o.start(t0);
         o.stop(t0 + beatS * 2);
-      }
-
-      // brushes: soft swung hat on 2 and 4 (not in zen)
-      if (intensity !== "zen" && (inBar === 1 || inBar === 3)) {
-        const src = this.ctx.createBufferSource();
-        src.buffer = this.noiseBuffer();
-        const hp = this.ctx.createBiquadFilter();
-        hp.type = "highpass";
-        hp.frequency.value = 7000;
-        const g = this.ctx.createGain();
-        this.env(g, t0, intensity === "speed" ? 0.03 : 0.018, 0.002, 0.09);
-        src.connect(hp).connect(g).connect(this.musicGain);
-        src.start(t0);
-        src.stop(t0 + 0.2);
       }
 
       // melody: a swung pentatonic phrase note, sparse
