@@ -123,15 +123,19 @@ export class Renderer {
     ctx.strokeStyle = "rgba(255,255,255,0.5)";
     ctx.lineWidth = 1;
     ctx.stroke();
-    // board drop shadow onto the page
+    // board drop shadow onto the page — gradient, not ctx.filter
+    // (Safari has no canvas filter support; a filter-blur renders solid there)
     ctx.save();
-    ctx.globalAlpha = 0.14;
-    ctx.filter = "blur(6px)";
-    ctx.fillStyle = "#141619";
+    ctx.translate(v.cx, v.nearY + railN + 9);
+    ctx.scale(1, 18 / (v.nearHalfW + railN + 24));
+    const bsh = ctx.createRadialGradient(0, 0, (v.nearHalfW + railN) * 0.55, 0, 0, v.nearHalfW + railN + 24);
+    bsh.addColorStop(0, "rgba(20,22,25,0.16)");
+    bsh.addColorStop(0.75, "rgba(20,22,25,0.08)");
+    bsh.addColorStop(1, "rgba(20,22,25,0)");
+    ctx.fillStyle = bsh;
     ctx.beginPath();
-    ctx.ellipse(v.cx, v.nearY + railN + 8, v.nearHalfW + railN, 10, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, v.nearHalfW + railN + 24, 0, Math.PI * 2);
     ctx.fill();
-    ctx.filter = "none";
     ctx.restore();
 
     // surface — soft vertical falloff like a photographed board

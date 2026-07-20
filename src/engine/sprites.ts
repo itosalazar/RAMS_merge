@@ -650,22 +650,89 @@ const regal: Drawer = (ctx, w, h) => {
   ctx.stroke();
 };
 
-/** T11 Monolith — the thesis: a ceramic disc, one orange dot */
-const monolith: Drawer = (ctx, w, h) => {
-  const r = Math.min(w, h) / 2 - 2;
-  const cx = w / 2, cy = h / 2;
-  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.1, cx, cy, r * 1.15);
-  g.addColorStop(0, "#ffffff");
-  g.addColorStop(0.6, C.white);
-  g.addColorStop(1, "#d8dade");
+/** T11 Konzert — the flagship: a concert stereo, a disc at its heart,
+ * a bank of grey knobs. Sixty years of the series in one instrument. */
+const konzert: Drawer = (ctx, w, h) => {
+  const bodyH = h - 8;
+  // plinth feet
+  for (const fx of [w * 0.08, w * 0.86]) {
+    rr(ctx, fx, h - 8, w * 0.06, 8, 3);
+    ctx.fillStyle = C.darkLo;
+    ctx.fill();
+  }
+  body3D(ctx, 0, 0, w, bodyH, 12);
+
+  // left voice: drilled speaker field
+  inset(ctx, w * 0.035, bodyH * 0.1, w * 0.235, bodyH * 0.8, 7);
+  holes(ctx, w * 0.065, bodyH * 0.18, 6, 9, w * 0.035, 1.7);
+
+  // the disc at the heart — front-facing platter
+  const cx = w / 2, cy = bodyH * 0.48, R = bodyH * 0.37;
+  knob3D(ctx, cx, cy, R + 5, C.grey, "#8f949c"); // platter rim
+  const disc = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.35, R * 0.1, cx, cy, R);
+  disc.addColorStop(0, "#43474c");
+  disc.addColorStop(0.6, C.dark);
+  disc.addColorStop(1, C.darkLo);
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = g;
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fillStyle = disc;
   ctx.fill();
-  ctx.strokeStyle = "rgba(35,37,40,0.18)";
-  ctx.lineWidth = 1.5;
+  // grooves
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 1;
+  for (let r = R * 0.4; r < R * 0.92; r += 4) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  // glass sheen across the disc
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+  const sheen = ctx.createLinearGradient(cx - R, cy - R, cx + R * 0.4, cy + R * 0.4);
+  sheen.addColorStop(0, "rgba(255,255,255,0.22)");
+  sheen.addColorStop(0.5, "rgba(255,255,255,0.02)");
+  sheen.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  ctx.restore();
+  orange3D(ctx, cx, cy, R * 0.18);
+  dot(ctx, cx, cy, 2, C.ink); // spindle
+  // tonearm resting at two o'clock
+  ctx.strokeStyle = C.steelDark;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx + R * 1.02, cy - R * 0.72);
+  ctx.lineTo(cx + R * 0.45, cy - R * 0.1);
   ctx.stroke();
-  orange3D(ctx, cx, cy, 13);
+  knob3D(ctx, cx + R * 1.02, cy - R * 0.72, 4.5, C.steel);
+
+  // right bank: tuning window + grey knobs, thorough to the last detail
+  inset(ctx, w * 0.73, bodyH * 0.1, w * 0.235, bodyH * 0.16, 4, C.dark);
+  ctx.fillStyle = "#a9bfa9";
+  ctx.font = `600 ${bodyH * 0.07}px ui-monospace, monospace`;
+  ctx.textAlign = "left";
+  ctx.fillText("104.6", w * 0.755, bodyH * 0.21);
+  const kx = [0.775, 0.855, 0.935];
+  for (const ky of [bodyH * 0.4, bodyH * 0.62])
+    for (const [i, fx] of kx.entries())
+      knob3D(ctx, w * fx, ky, bodyH * 0.055, ky === bodyH * 0.4 && i === 2 ? C.white : C.graphite, ky === bodyH * 0.4 && i === 2 ? undefined : C.darkLo);
+  // toggle row under the knobs
+  for (let i = 0; i < 3; i++) {
+    rr(ctx, w * (0.755 + i * 0.075), bodyH * 0.76, w * 0.04, bodyH * 0.1, 2);
+    ctx.fillStyle = C.dark;
+    ctx.fill();
+    rr(ctx, w * (0.755 + i * 0.075) + 1.5, bodyH * 0.77, w * 0.04 - 3, bodyH * 0.04, 1.5);
+    ctx.fillStyle = i === 1 ? C.greyDark : C.case;
+    ctx.fill();
+  }
+  // full-width dark control strip along the base
+  rr(ctx, w * 0.035, bodyH * 0.92, w * 0.93, bodyH * 0.05, 3);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
+  orange3D(ctx, w * 0.955, bodyH * 0.945, 3.5);
 };
 
-const DRAWERS: Drawer[] = [punkt, funk, notiz, zahl, klang, welle, dreh, bild, system, regal, monolith];
+const DRAWERS: Drawer[] = [punkt, funk, notiz, zahl, klang, welle, dreh, bild, system, regal, konzert];

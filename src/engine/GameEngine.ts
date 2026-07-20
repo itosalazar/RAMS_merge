@@ -444,7 +444,7 @@ export class GameEngine {
       this.events.emit("newTarget", { tier: this.targetTier });
     }
     if (newTier === MAX_TIER && this.mode === "classic") {
-      // the Monolith's exhibition debut clears the bench
+      // the Konzert's exhibition debut clears the board
       this.stats.score += MONOLITH_CLEAR_BONUS;
       this.events.emit("score", { score: this.stats.score, delta: MONOLITH_CLEAR_BONUS });
       this.events.emit("monolith", { score: this.stats.score });

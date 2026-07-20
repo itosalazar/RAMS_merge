@@ -174,16 +174,16 @@ export const PRODUCTS: Product[] = [
   {
     tier: 11,
     model: "RM-11",
-    name: "Monolith",
-    object: "Museum-scale concept object",
+    name: "Konzert",
+    object: "Concert stereo console",
     year: 2024,
-    footprint: { kind: "circle", r: 170 },
-    spriteH: 340,
-    material: "ceramic",
-    materials: "Seamless ceramic",
-    principle: 10,
+    footprint: { kind: "rect", w: 380, h: 180 },
+    spriteH: 230,
+    material: "metal",
+    materials: "Aluminium, glass, steel",
+    principle: 8,
     rationale:
-      "The final product does nothing. A seamless ceramic disc, one orange dot at its centre — the RM series reduced to its thesis. Sixty years of radios, recorders and shelving argued toward this silence: the endpoint of good design is the disappearance of design. Exhibited once. Understood slowly.",
+      "Sixty years of the series, assembled into one instrument. The Konzert is everything the workshop learned, playing at full volume: a disc at its heart, drilled fields for its voice, and a bank of grey knobs — every one of them earning its seat. Built for a single exhibition and tuned in the hall itself. Nobody dared to ship it. Nobody needed to.",
   },
 ];
 

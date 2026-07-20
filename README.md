@@ -9,7 +9,7 @@ A merge game on a designer's drafting table, built the way Braun would have buil
 
 ## What it is
 
-Slide fictional mid-century products across a drafting table seen in perspective. Two identical products that meet with intent merge into the next, larger object — eleven tiers, from the **RM-01 Punkt** pocket alarm clock (1962) to the **RM-11 Monolith**, a museum-scale disc with a single orange dot (2024).
+Slide fictional mid-century products across a drafting table seen in perspective. Two identical products that meet with intent merge into the next, larger object — eleven tiers, from the **RM-01 Punkt** pocket alarm clock (1962) to the **RM-11 Konzert**, a concert stereo console built for a single exhibition (2024).
 
 There are no coins and no gems. Progression is **knowledge**: every discovery files a museum card, a Rams principle, or a design-history note into your personal Archive — a growing exhibition of everything you've made.
 
