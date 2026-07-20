@@ -37,8 +37,8 @@ export const PRODUCTS: Product[] = [
     name: "Punkt",
     object: "Pocket alarm clock",
     year: 1962,
-    footprint: { kind: "circle", r: 22 },
-    spriteH: 52,
+    footprint: { kind: "circle", r: 30 },
+    spriteH: 66,
     material: "plastic",
     materials: "ABS, glass, steel",
     principle: 10,
@@ -51,8 +51,8 @@ export const PRODUCTS: Product[] = [
     name: "Funk",
     object: "Transistor radio",
     year: 1963,
-    footprint: { kind: "rect", w: 56, h: 40 },
-    spriteH: 80,
+    footprint: { kind: "rect", w: 66, h: 48 },
+    spriteH: 88,
     material: "plastic",
     materials: "ABS, aluminium, paper cone",
     principle: 4,
@@ -65,8 +65,8 @@ export const PRODUCTS: Product[] = [
     name: "Notiz",
     object: "Pocket tape recorder",
     year: 1965,
-    footprint: { kind: "rect", w: 72, h: 50 },
-    spriteH: 96,
+    footprint: { kind: "rect", w: 82, h: 58 },
+    spriteH: 104,
     material: "plastic",
     materials: "ABS, acrylic, leather",
     principle: 2,
@@ -79,8 +79,8 @@ export const PRODUCTS: Product[] = [
     name: "Zahl",
     object: "Desktop calculator",
     year: 1968,
-    footprint: { kind: "rect", w: 74, h: 98 },
-    spriteH: 74,
+    footprint: { kind: "rect", w: 100, h: 88 },
+    spriteH: 96,
     material: "plastic",
     materials: "ABS, silicone, LED",
     principle: 4,
@@ -93,8 +93,8 @@ export const PRODUCTS: Product[] = [
     name: "Klang",
     object: "Bookshelf speaker",
     year: 1971,
-    footprint: { kind: "circle", r: 59 },
-    spriteH: 128,
+    footprint: { kind: "circle", r: 62 },
+    spriteH: 130,
     material: "fabric",
     materials: "Beech ply, wool fabric, ABS",
     principle: 5,
@@ -107,8 +107,8 @@ export const PRODUCTS: Product[] = [
     name: "Welle",
     object: "Table radio-receiver",
     year: 1974,
-    footprint: { kind: "rect", w: 168, h: 110 },
-    spriteH: 118,
+    footprint: { kind: "rect", w: 150, h: 95 },
+    spriteH: 108,
     material: "metal",
     materials: "Steel, elm, acrylic",
     principle: 3,
@@ -121,8 +121,8 @@ export const PRODUCTS: Product[] = [
     name: "Dreh",
     object: "Record player",
     year: 1977,
-    footprint: { kind: "rect", w: 196, h: 150 },
-    spriteH: 100,
+    footprint: { kind: "rect", w: 185, h: 130 },
+    spriteH: 110,
     material: "glass",
     materials: "Aluminium, acrylic, rubber",
     principle: 6,
@@ -136,7 +136,7 @@ export const PRODUCTS: Product[] = [
     object: "Portable television",
     year: 1981,
     footprint: { kind: "circle", r: 112 },
-    spriteH: 210,
+    spriteH: 190,
     material: "glass",
     materials: "CRT glass, ABS, steel",
     principle: 5,
@@ -149,8 +149,8 @@ export const PRODUCTS: Product[] = [
     name: "System",
     object: "Modular hi-fi stack",
     year: 1986,
-    footprint: { kind: "rect", w: 268, h: 200 },
-    spriteH: 260,
+    footprint: { kind: "rect", w: 270, h: 180 },
+    spriteH: 220,
     material: "metal",
     materials: "Brushed aluminium, glass, steel",
     principle: 7,
@@ -163,8 +163,8 @@ export const PRODUCTS: Product[] = [
     name: "Regal",
     object: "Modular sideboard",
     year: 1994,
-    footprint: { kind: "rect", w: 340, h: 230 },
-    spriteH: 190,
+    footprint: { kind: "rect", w: 330, h: 200 },
+    spriteH: 180,
     material: "wood",
     materials: "Oak, white laminate, steel hairpin",
     principle: 9,
@@ -177,8 +177,8 @@ export const PRODUCTS: Product[] = [
     name: "Monolith",
     object: "Museum-scale concept object",
     year: 2024,
-    footprint: { kind: "circle", r: 200 },
-    spriteH: 400,
+    footprint: { kind: "circle", r: 190 },
+    spriteH: 380,
     material: "ceramic",
     materials: "Seamless ceramic",
     principle: 10,
@@ -186,17 +186,6 @@ export const PRODUCTS: Product[] = [
       "The final product does nothing. A seamless ceramic disc, one orange dot at its centre — the RM series reduced to its thesis. Sixty years of radios, recorders and shelving argued toward this silence: the endpoint of good design is the disappearance of design. Exhibited once. Understood slowly.",
   },
 ];
-
-/** Global product scale (creative direction: +50%, 2026-07-19). */
-const SIZE_SCALE = 1.5;
-for (const p of PRODUCTS) {
-  if (p.footprint.kind === "circle") p.footprint.r *= SIZE_SCALE;
-  else {
-    p.footprint.w *= SIZE_SCALE;
-    p.footprint.h *= SIZE_SCALE;
-  }
-  p.spriteH *= SIZE_SCALE;
-}
 
 export const productForTier = (tier: number): Product => PRODUCTS[tier - 1];
 

@@ -15,7 +15,7 @@ export const FAR_SPRITE_SCALE = 0.82;
 export const UNIFORM_MASS = 5;
 export const DENSITY_BASE = 0.0012; // pre-setMass placeholder density
 export const RESTITUTION = () => 0.4;
-export const FRICTION_AIR = () => 0.014; // +25% surface resistance
+export const FRICTION_AIR = () => 0.0161; // surface resistance, tuned up again (+15%)
 export const SURFACE_FRICTION = 0.06;
 export const WALL_RESTITUTION = 0.5; // calmer carom off the rails
 

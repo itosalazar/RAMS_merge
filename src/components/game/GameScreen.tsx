@@ -381,27 +381,26 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         onPointerCancel={onPointerUp}
       />
 
-      {/* the feed: an arrow-shaped magazine of upcoming products —
-          the tip of the arrow holds what gets thrown next */}
+      {/* the feed: a small dark window — a product detail. Items read
+          left → right; the leftmost, marked orange, is thrown next. */}
       <div
         className="absolute inset-x-0 z-20 flex flex-col items-center gap-1 pointer-events-none"
         style={{ bottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
       >
         <p className="text-[9px] font-semibold tracking-[0.14em] text-graphite/60">NEXT</p>
-        <div style={{ filter: "drop-shadow(0 3px 8px rgba(20,22,25,0.22))" }}>
-          <div
-            className="flex items-center gap-4 py-2 pr-6 bg-[linear-gradient(180deg,#fafbfc_0%,#e6e8eb_55%,#d5d8dd_100%)]"
-            style={{
-              clipPath: "polygon(0% 50%, 44px 0%, 100% 0%, 100% 100%, 44px 100%)",
-              paddingLeft: 22,
-            }}
-          >
-            {queue.slice(0, 3).map((t, i) => (
-              <div key={i} className={i === 0 ? "" : "opacity-65"}>
-                <ProductThumb tier={t} size={i === 0 ? 46 : 34} />
+        <div className="flex items-end gap-5 px-5 pt-2.5 pb-2 rounded-2xl bg-[linear-gradient(180deg,#4a4d52_0%,#33363b_55%,#26282c_100%)] shadow-knob-dark border border-white/10">
+          {queue.slice(0, 3).map((t, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5">
+              <div className={i === 0 ? "" : "opacity-55"}>
+                <ProductThumb tier={t} size={i === 0 ? 44 : 34} />
               </div>
-            ))}
-          </div>
+              <span
+                className={`h-[3px] rounded-full transition-all ${
+                  i === 0 ? "w-6 bg-orange shadow-[0_0_5px_rgba(237,128,8,0.7)]" : "w-2 bg-white/15"
+                }`}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -479,7 +478,11 @@ export function GameScreen({ mode }: { mode: GameMode }) {
             >
               <div className="w-8 h-1 rounded-full bg-case mx-auto mb-6" />
               <p className="text-[11px] font-medium tracking-[0.12em] text-graphite/70 mb-1">
-                {mode === "time-attack" ? "TARGET COMPLETE" : "THE BOARD IS FULL"}
+                {mode === "time-attack"
+                  ? "TARGET COMPLETE"
+                  : mode === "speed-merge"
+                    ? "TIME RAN OUT"
+                    : "THE BOARD IS FULL"}
                 {over.newRecord && <span className="text-orange"> · NEW RECORD</span>}
               </p>
               <p className="dot-matrix text-5xl text-ink mb-6">
@@ -513,19 +516,24 @@ export function GameScreen({ mode }: { mode: GameMode }) {
   );
 }
 
-/** A small LED display — dark glass, luminous digits (ref: product_06 clock). */
+/** A small LED display set into a moulded bezel — a product detail
+ * (ref: product_06 clock). Dark glass, luminous digits, two fasteners. */
 function Led({ value, urgent = false }: { value: string; urgent?: boolean }) {
   return (
     <span
-      className="inline-block rounded-lg px-2.5 py-1 bg-[#1d1f22] shadow-[inset_0_2px_4px_rgba(0,0,0,0.6),0_1px_0_rgba(255,255,255,0.5)]"
+      className="inline-flex items-center gap-1.5 rounded-xl pl-2 pr-1.5 py-1 bg-[linear-gradient(180deg,#fafbfc_0%,#e6e8eb_55%,#d2d5da_100%)] shadow-knob border border-white/60"
       aria-label="timer"
     >
-      <span
-        className={`dot-matrix text-xl leading-none ${urgent ? "text-orange" : "text-[#a9bfa9]"}`}
-        style={{ textShadow: urgent ? "0 0 6px rgba(237,128,8,0.6)" : "0 0 6px rgba(169,191,169,0.45)" }}
-      >
-        {value}
+      <span className="w-[3px] h-[3px] rounded-full bg-graphite/40 shadow-[0_0.5px_0_rgba(255,255,255,0.8)]" />
+      <span className="inline-block rounded-md px-2 py-0.5 bg-[#1d1f22] shadow-[inset_0_2px_4px_rgba(0,0,0,0.65)]">
+        <span
+          className={`dot-matrix text-base leading-none ${urgent ? "text-orange" : "text-[#a9bfa9]"}`}
+          style={{ textShadow: urgent ? "0 0 6px rgba(237,128,8,0.6)" : "0 0 5px rgba(169,191,169,0.45)" }}
+        >
+          {value}
+        </span>
       </span>
+      <span className="w-[3px] h-[3px] rounded-full bg-graphite/40 shadow-[0_0.5px_0_rgba(255,255,255,0.8)]" />
     </span>
   );
 }
