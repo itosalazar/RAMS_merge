@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * The Rams Moment — 1.1s of quiet wisdom (GDD §12). Fades in, the principle
- * types on in dot-matrix, holds, fades. The game continues behind it.
+ * The Rams Moment — four seconds of quiet wisdom (GDD §12, revised).
+ * The mentor appears on his calculator screen, the principle types on
+ * in dot-matrix, holds, fades. The game continues behind it.
  */
 
 import { useEffect, useState } from "react";
@@ -14,13 +15,13 @@ export function RamsToast({ text, nonce }: { text: string | null; nonce: number 
 
   useEffect(() => {
     if (!text) return;
-    // type-on: first tick clears, then one glyph per tick
+    // type-on over ~0.9s: first tick clears, then one glyph per tick
     let i = -1;
     const iv = setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));
       if (i >= text.length) clearInterval(iv);
-    }, 500 / Math.max(1, text.length));
+    }, 900 / Math.max(1, text.length));
     return () => clearInterval(iv);
   }, [text, nonce]);
 
@@ -35,7 +36,7 @@ export function RamsToast({ text, nonce }: { text: string | null; nonce: number 
           transition={{ duration: 0.12 }}
           className="absolute left-4 bottom-28 flex items-end gap-3 pointer-events-none z-30"
         >
-          <PixelRams size={40} />
+          <PixelRams size={58} />
           <div className="bg-paper/95 border border-case rounded-lg px-3 py-2 shadow-contact mb-1">
             <p className="dot-matrix text-[13px] text-ink">{shown}</p>
           </div>

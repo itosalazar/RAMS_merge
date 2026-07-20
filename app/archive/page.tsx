@@ -155,18 +155,17 @@ export default function ArchivePage() {
                 const made = perTier[open] ?? 0;
                 return (
                   <>
-                    <div className="w-8 h-1 rounded-full bg-case mx-auto mb-6" />
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[11px] font-medium tracking-[0.12em] text-orange">{p.year}</p>
-                        <h2 className="text-2xl font-bold tracking-tight mt-0.5">
-                          {p.model} <span className="font-medium italic">{p.name}</span>
-                        </h2>
-                        <p className="text-sm text-graphite">{p.object}</p>
-                      </div>
-                      <div className="bg-board border border-case rounded-lg p-2 shadow-contact">
-                        <ProductThumb tier={p.tier} size={72} />
-                      </div>
+                    <div className="w-8 h-1 rounded-full bg-case mx-auto mb-5" />
+                    {/* the exhibit: a large study of the object on its stage */}
+                    <div className="rounded-2xl bg-[linear-gradient(180deg,#f4f5f7_0%,#e6e8eb_70%,#dcdee2_100%)] border border-white/70 shadow-contact flex items-end justify-center pt-6 pb-4 mb-5">
+                      <ProductThumb tier={p.tier} size={172} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-medium tracking-[0.12em] text-orange">{p.year}</p>
+                      <h2 className="text-2xl font-bold tracking-tight mt-0.5">
+                        {p.model} <span className="font-medium italic">{p.name}</span>
+                      </h2>
+                      <p className="text-sm text-graphite">{p.object}</p>
                     </div>
                     <p className="selectable text-[15px] text-ink/90 leading-relaxed mt-5">{p.rationale}</p>
                     <div className="flex flex-wrap gap-2 mt-5">

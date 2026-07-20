@@ -70,7 +70,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
     meta.getState().seePrinciple(p.n);
     audio.ramsMoment();
     setRams({ text: p.short, nonce: now });
-    setTimeout(() => setRams((r) => (r && r.nonce === now ? null : r)), 1400);
+    setTimeout(() => setRams((r) => (r && r.nonce === now ? null : r)), 4000);
   }, [meta]);
 
   /* ── engine lifecycle ──────────────────────────────────────────── */
@@ -92,9 +92,12 @@ export function GameScreen({ mode }: { mode: GameMode }) {
     const offs = [
       engine.events.on("score", ({ score }) => setScore(score)),
       engine.events.on("staged", ({ queue }) => setQueue(queue)),
-      engine.events.on("launch", () => {
+      engine.events.on("launch", ({ tier }) => {
         audio.launch();
-        meta.getState().addLaunch();
+        const m = meta.getState();
+        m.addLaunch();
+        // throwing an object is meeting it — spawn tiers enter the archive
+        m.discover(tier);
       }),
       engine.events.on("impact", ({ energy, tierA, tierB }) => {
         const matA = productForTier(Math.max(1, tierA)).material;
@@ -388,15 +391,15 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         style={{ bottom: "max(0.9rem, env(safe-area-inset-bottom))" }}
       >
         <p className="text-[9px] font-semibold tracking-[0.14em] text-graphite/60">NEXT</p>
-        <div className="flex items-end gap-5 px-5 pt-2.5 pb-2 rounded-2xl bg-[linear-gradient(180deg,#4a4d52_0%,#33363b_55%,#26282c_100%)] shadow-knob-dark border border-white/10">
+        <div className="flex items-end gap-6 px-6 pt-3 pb-2.5 rounded-2xl bg-[linear-gradient(180deg,#4a4d52_0%,#33363b_55%,#26282c_100%)] shadow-knob-dark border border-white/10">
           {queue.slice(0, 3).map((t, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">
               <div className={i === 0 ? "" : "opacity-55"}>
-                <ProductThumb tier={t} size={i === 0 ? 44 : 34} />
+                <ProductThumb tier={t} size={i === 0 ? 53 : 41} />
               </div>
               <span
                 className={`h-[3px] rounded-full transition-all ${
-                  i === 0 ? "w-6 bg-orange shadow-[0_0_5px_rgba(237,128,8,0.7)]" : "w-2 bg-white/15"
+                  i === 0 ? "w-7 bg-orange shadow-[0_0_5px_rgba(237,128,8,0.7)]" : "w-2.5 bg-white/15"
                 }`}
               />
             </div>

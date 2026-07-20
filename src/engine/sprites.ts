@@ -216,7 +216,15 @@ const punkt: Drawer = (ctx, w, h) => {
   og.addColorStop(1, C.orangeLo);
   ctx.fillStyle = og;
   ctx.fill();
+  // side winder knob
+  rr(ctx, w - 3, by + bh * 0.35, 5, bh * 0.16, 2);
+  ctx.fillStyle = C.graphite;
+  ctx.fill();
   body3D(ctx, 0, by, bw, bh, w * 0.22);
+  // dark base band
+  rr(ctx, w * 0.08, h - 5, w * 0.84, 5, 2.5);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
   // recessed round face
   const cx = w / 2, cy = by + bh / 2, r = Math.min(w, bh) * 0.34;
   knob3D(ctx, cx, cy, r + 2, C.white);
@@ -248,9 +256,18 @@ const funk: Drawer = (ctx, w, h) => {
   body3D(ctx, 0, 0, w, h, 9);
   inset(ctx, w * 0.12, h * 0.1, w * 0.76, h * 0.42, 5);
   holes(ctx, w * 0.2, h * 0.18, 5, 3, (w * 0.6) / 4, 1.5);
-  // centered dial with orange pointer
-  const dy = h * 0.74;
+  // centered dial with orange pointer + tick ring
+  const dy = h * 0.72;
   knob3D(ctx, w / 2, dy, 10, C.white);
+  ctx.strokeStyle = C.graphite;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 + Math.cos(a) * 12, dy + Math.sin(a) * 12);
+    ctx.lineTo(w / 2 + Math.cos(a) * 14, dy + Math.sin(a) * 14);
+    ctx.stroke();
+  }
   ctx.strokeStyle = C.orange;
   ctx.lineWidth = 2.2;
   ctx.lineCap = "round";
@@ -258,9 +275,13 @@ const funk: Drawer = (ctx, w, h) => {
   ctx.moveTo(w / 2, dy);
   ctx.lineTo(w / 2 + 6.5, dy - 5);
   ctx.stroke();
-  // two side studs
-  knob3D(ctx, w * 0.16, dy, 3.5, C.case);
-  knob3D(ctx, w * 0.84, dy, 3.5, C.case);
+  // two dark side knobs
+  knob3D(ctx, w * 0.15, dy, 4, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.85, dy, 4, C.graphite, C.darkLo);
+  // dark chin strip with volume wheel
+  rr(ctx, w * 0.3, h - 5.5, w * 0.4, 4, 2);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
 };
 
 /** T3 Notiz — a pocket dictation machine: window, three keys, grey strap */
@@ -286,8 +307,18 @@ const notiz: Drawer = (ctx, w, h) => {
   rr(ctx, wx, wy, ww, wh, 5);
   ctx.fillStyle = glass;
   ctx.fill();
+  // tape counter window + screws
+  inset(ctx, w * 0.14, h * 0.6, w * 0.24, h * 0.08, 2, C.dark);
+  ctx.fillStyle = "#a9bfa9";
+  ctx.font = `600 ${h * 0.05}px ui-monospace, monospace`;
+  ctx.textAlign = "left";
+  ctx.fillText("047", w * 0.17, h * 0.66);
+  knob3D(ctx, w * 0.72, h * 0.64, 3.5, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.84, h * 0.64, 3.5, C.graphite, C.darkLo);
+  dot(ctx, w * 0.08, h * 0.1, 1.2, C.greyDark);
+  dot(ctx, w * 0.92, h * 0.1, 1.2, C.greyDark);
   // three keys, middle orange
-  const ky = h * 0.7, kw = w * 0.2, kh = h * 0.16;
+  const ky = h * 0.72, kw = w * 0.2, kh = h * 0.15;
   for (const [i, kx] of [w * 0.16, w * 0.4, w * 0.64].entries()) {
     rr(ctx, kx, ky, kw, kh, kh / 2);
     const g = ctx.createLinearGradient(0, ky, 0, ky + kh);
@@ -315,23 +346,36 @@ const zahl: Drawer = (ctx, w, h) => {
   ctx.font = `600 ${h * 0.09}px ui-monospace, monospace`;
   ctx.textAlign = "right";
   ctx.fillText("0.", w * 0.84, h * 0.18);
-  // 4×4 pillow keys, orange `=`
+  // 4×4 pillow keys: dark function row on top, orange `=`
   const gx = w * 0.1, gy = h * 0.3, pitch = (w * 0.8) / 4;
   for (let i = 0; i < 4; i++)
     for (let j = 0; j < 4; j++) {
       const kx = gx + i * pitch + pitch * 0.38;
       const ky = gy + j * pitch * 0.72 + pitch * 0.3;
       if (i === 3 && j === 3) orange3D(ctx, kx, ky, pitch * 0.3);
+      else if (j === 0) knob3D(ctx, kx, ky, pitch * 0.28, C.graphite, C.darkLo);
       else knob3D(ctx, kx, ky, pitch * 0.3, C.white);
     }
+  // side power slider
+  rr(ctx, 0, h * 0.34, 3.5, h * 0.14, 1.5);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
 };
 
 /** T5 Klang — a soft-square speaker, spiral drill pattern, grey rim */
 const klang: Drawer = (ctx, w, h) => {
   body3D(ctx, 0, 0, w, h, w * 0.24, "#cdd1d7", C.grey, "#a3a8b0");
   body3D(ctx, 2.5, 3, w - 5, h - 6, w * 0.22);
+  // dark surround ring behind the drill field
+  ctx.strokeStyle = "rgba(35,37,40,0.3)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(w / 2, h / 2 + 1, Math.min(w, h) * 0.4, 0, Math.PI * 2);
+  ctx.stroke();
   spiralHoles(ctx, w / 2, h / 2 + 1, Math.min(w, h) * 0.37);
-  orange3D(ctx, w / 2, h - 9, 3);
+  // control pair on the chin: dark volume knob + orange power dot
+  knob3D(ctx, w * 0.38, h - 9, 4, C.graphite, C.darkLo);
+  orange3D(ctx, w * 0.58, h - 9, 3);
 };
 
 /** T6 Welle — a table receiver: tuning window up top, slat vents below */
@@ -369,9 +413,16 @@ const welle: Drawer = (ctx, w, h) => {
     ctx.fillStyle = g;
     ctx.fill();
   }
-  // knobs
-  knob3D(ctx, w * 0.2, h * 0.91, 5, C.white);
-  orange3D(ctx, w * 0.8, h * 0.91, 5);
+  // dark end caps
+  rr(ctx, 0, h * 0.08, 5, h * 0.76, 2.5);
+  rr(ctx, w - 5, h * 0.08, 5, h * 0.76, 2.5);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
+  // control row: two dark knobs, one white, one orange
+  knob3D(ctx, w * 0.16, h * 0.91, 5, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.34, h * 0.91, 4, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.52, h * 0.91, 4, C.white);
+  orange3D(ctx, w * 0.82, h * 0.91, 5);
 };
 
 /** T7 Dreh — a turntable console, foreshortened platter, acrylic sheen */
@@ -418,11 +469,22 @@ const dreh: Drawer = (ctx, w, h) => {
   rr(ctx, w * 0.04, 2, w * 0.92, h * 0.46, 6);
   ctx.fillStyle = lid;
   ctx.fill();
-  // fascia controls
+  // fascia: dark control strip with pitch slider, knobs, switches
+  rr(ctx, w * 0.05, h * 0.62, w * 0.9, h * 0.2, 4);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
+  rr(ctx, w * 0.09, h * 0.7, w * 0.3, 2.5, 1.25);
+  ctx.fillStyle = C.greyDark;
+  ctx.fill();
+  rr(ctx, w * 0.19, h * 0.66, 5, h * 0.1, 2);
+  ctx.fillStyle = C.case;
+  ctx.fill();
+  knob3D(ctx, w * 0.55, h * 0.72, 4.5, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.68, h * 0.72, 4.5, C.white);
   knob3D(ctx, w * 0.82, h * 0.72, 4.5, C.white);
-  knob3D(ctx, w * 0.91, h * 0.72, 4.5, C.white);
+  knob3D(ctx, w * 0.92, h * 0.72, 3.5, C.graphite, C.darkLo);
   for (let i = 0; i < 6; i++) {
-    rr(ctx, w * 0.07 + i * 7, h * 0.66, 4, 9, 2);
+    rr(ctx, w * 0.07 + i * 7, h * 0.88, 4, 7, 2);
     ctx.fillStyle = C.case;
     ctx.fill();
   }
@@ -445,9 +507,23 @@ const bild: Drawer = (ctx, w, h) => {
   rr(ctx, sx, sy, sw, sh, w * 0.08);
   ctx.fillStyle = sheen;
   ctx.fill();
-  // grille + channel knob
-  holes(ctx, w * 0.18, h * 0.82, 9, 2, w * 0.07, 1.6);
+  // dark control band under the screen
+  rr(ctx, w * 0.08, h * 0.78, w * 0.84, h * 0.13, 4);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
+  holes(ctx, w * 0.16, h * 0.82, 7, 2, w * 0.055, 1.4);
+  // channel dial with tick ring + dark volume knob
+  ctx.strokeStyle = C.greyDark;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.87 + Math.cos(a) * 7, h * 0.845 + Math.sin(a) * 7);
+    ctx.lineTo(w * 0.87 + Math.cos(a) * 8.5, h * 0.845 + Math.sin(a) * 8.5);
+    ctx.stroke();
+  }
   orange3D(ctx, w * 0.87, h * 0.845, 5.5);
+  knob3D(ctx, w * 0.72, h * 0.845, 4, C.graphite, C.darkLo);
   // feet
   rr(ctx, w * 0.2, h - 6, w * 0.14, 6, 3);
   rr(ctx, w * 0.66, h - 6, w * 0.14, 6, 3);
@@ -487,7 +563,17 @@ const system: Drawer = (ctx, w, h) => {
   dot(ctx, w * 0.7, mh / 2, mh * 0.1, C.graphite);
   orange3D(ctx, w * 0.92, mh * 0.22, 4);
   drawModule(mh + 5);
-  for (let i = 0; i < 4; i++) knob3D(ctx, w * (0.2 + i * 0.2), mh + 5 + mh / 2, mh * 0.16, C.white);
+  for (let i = 0; i < 4; i++)
+    knob3D(ctx, w * (0.2 + i * 0.2), mh + 5 + mh * 0.36, mh * 0.16, i % 2 ? C.graphite : C.white, i % 2 ? C.darkLo : undefined);
+  // toggle switch row on the amplifier
+  for (let i = 0; i < 5; i++) {
+    rr(ctx, w * (0.16 + i * 0.15), mh + 5 + mh * 0.64, w * 0.05, mh * 0.2, 2);
+    ctx.fillStyle = C.dark;
+    ctx.fill();
+    rr(ctx, w * (0.16 + i * 0.15) + 1, mh + 5 + mh * 0.66, w * 0.05 - 2, mh * 0.08, 1.5);
+    ctx.fillStyle = i < 3 ? C.case : C.greyDark;
+    ctx.fill();
+  }
   drawModule((mh + 5) * 2);
   inset(ctx, w * 0.1, (mh + 5) * 2 + mh * 0.28, w * 0.8, mh * 0.2, 3, C.white);
   ctx.strokeStyle = C.orange;
@@ -517,7 +603,10 @@ const regal: Drawer = (ctx, w, h) => {
     ctx.lineTo(lx + 2, h);
     ctx.stroke();
   }
-  // grey carcass + white lacquer front
+  // grey carcass + white lacquer front on a dark plinth
+  rr(ctx, w * 0.04, bodyH - 3, w * 0.92, 6, 3);
+  ctx.fillStyle = C.dark;
+  ctx.fill();
   body3D(ctx, 0, 0, w, bodyH, 7, "#c9cdd3", C.grey, "#9ba0a8");
   body3D(ctx, w * 0.03, 3, w * 0.94, bodyH - 7, 5, "#fdfdfe", C.white, "#e2e4e8");
   const dw = (w * 0.94) / 3;
@@ -543,10 +632,12 @@ const regal: Drawer = (ctx, w, h) => {
   ctx.fill();
   dot(ctx, 0, 0, dw * 0.1, C.dark);
   ctx.restore();
-  // handle + orange cable spiral
+  // handle, radio knobs + orange cable spiral
   rr(ctx, w * 0.87, bodyH * 0.45, w * 0.05, 3.5, 1.75);
   ctx.fillStyle = C.case;
   ctx.fill();
+  knob3D(ctx, w * 0.13, bodyH * 0.72, dw * 0.06, C.graphite, C.darkLo);
+  knob3D(ctx, w * 0.22, bodyH * 0.72, dw * 0.06, C.graphite, C.darkLo);
   ctx.strokeStyle = C.orange;
   ctx.lineWidth = 1.8;
   ctx.beginPath();
