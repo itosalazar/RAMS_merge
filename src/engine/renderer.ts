@@ -37,15 +37,15 @@ export const LIGHT: ThemeColors = {
 };
 
 export const NIGHT: ThemeColors = {
-  paper: "#17181b",
-  bench: "#212327",
-  grid: "#3a3d43",
-  case_: "#33363b",
+  paper: "#141518",
+  bench: "#31353c", // clearly lifted off the dark page
+  grid: "#565b64",
+  case_: "#3d424a",
   graphite: "#b3b6bd",
   ink: "#eceef1",
   orange: "#ed8008",
-  oak: "#33363b",
-  oakDark: "#26282c",
+  oak: "#464b54",
+  oakDark: "#2f333a",
 };
 
 export class Renderer {
@@ -147,7 +147,7 @@ export class Renderer {
     ctx.closePath();
     const surf = ctx.createLinearGradient(0, v.farY, 0, v.nearY);
     surf.addColorStop(0, theme.bench);
-    surf.addColorStop(1, this.theme === NIGHT ? "#26282c" : "#eceef0");
+    surf.addColorStop(1, this.theme === NIGHT ? "#3a3f47" : "#eceef0");
     ctx.fillStyle = surf;
     ctx.fill();
 

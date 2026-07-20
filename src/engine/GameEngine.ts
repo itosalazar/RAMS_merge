@@ -260,7 +260,6 @@ export class GameEngine {
     const v = LAUNCH_V_MIN + (LAUNCH_V_MAX - LAUNCH_V_MIN) * this.aim.power;
     Body.setVelocity(body, { x: this.aim.dirX * v, y: this.aim.dirY * v });
     Composite.add(this.world, body);
-    if (process.env.NODE_ENV !== "production") console.log("[engine] launch tier", tier, "bodies:", this.productBodies().length);
     this.events.emit("launch", { tier });
     this.staged = null;
     this.clearAim();
@@ -397,7 +396,6 @@ export class GameEngine {
     Composite.remove(this.world, b);
 
     const body = this.createBody(newTier, mx, my, now);
-    if (process.env.NODE_ENV !== "production") console.log("[engine] merge →", newTier, "bodies:", this.productBodies().length);
     Body.setVelocity(body, { x: vx, y: vy });
     Composite.add(this.world, body);
 
@@ -506,9 +504,11 @@ export class GameEngine {
       }
     }
 
-    // failure (not in zen; time-attack ends by completion but can still jam)
+    // failure (not in zen; time-attack ends by completion but can still jam):
+    // the board is full when the settled pile leaves nowhere to place the
+    // next product along the launch line.
     if (this.mode !== "zen") {
-      const jammed = this.occupancy > OCCUPANCY_FAIL || this.launchZoneBlocked();
+      const jammed = this.boardFull() || this.occupancy > OCCUPANCY_FAIL;
       if (jammed) {
         if (!this.failSince) this.failSince = now;
         else if (now - this.failSince > FAIL_SUSTAIN_MS) this.endRun();
@@ -518,14 +518,40 @@ export class GameEngine {
     }
   }
 
-  private launchZoneBlocked(): boolean {
-    const zoneY = TABLE_D - LAUNCH_ZONE_D;
-    let blocked = 0;
+  /** True when no gap along the launch line can accept the staged product
+   * and the board has come to rest — the honest "no more moves" signal. */
+  private boardFull(): boolean {
+    if (!this.staged) return false;
+    const sp = productForTier(this.staged.tier).footprint;
+    const sHalfW = sp.kind === "circle" ? sp.r : sp.w / 2;
+    const sHalfH = sp.kind === "circle" ? sp.r : sp.h / 2;
+    const inset = this.shrinkInset;
+    const minX = inset + sHalfW;
+    const maxX = TABLE_W - inset - sHalfW;
+    if (maxX <= minX) return true;
+    const spawnY = TABLE_D - LAUNCH_ZONE_D - sHalfH - 4;
+
+    // blocked x-intervals on the launch line, from settled bodies whose
+    // vertical span overlaps where the staged product would sit
+    const intervals: [number, number][] = [];
     for (const b of this.productBodies()) {
-      const r = footprintRadius(productForTier(this.tierOf(b)).footprint);
-      if (b.position.y + r > zoneY && b.speed < 0.15) blocked += r * 2;
+      if (b.speed > 0.4) return false; // still in motion — not settled yet
+      const f = productForTier(this.tierOf(b)).footprint;
+      const bHalfW = f.kind === "circle" ? f.r : f.w / 2;
+      const bHalfH = f.kind === "circle" ? f.r : f.h / 2;
+      if (Math.abs(b.position.y - spawnY) < bHalfH + sHalfH) {
+        intervals.push([b.position.x - bHalfW - sHalfW, b.position.x + bHalfW + sHalfW]);
+      }
     }
-    return blocked > (TABLE_W - this.shrinkInset * 2) * 0.7;
+    if (!intervals.length) return false;
+    intervals.sort((a, b) => a[0] - b[0]);
+    let cursor = minX;
+    for (const [lo, hi] of intervals) {
+      if (lo > cursor + 0.5) return false; // a free slot exists here
+      cursor = Math.max(cursor, hi);
+      if (cursor >= maxX) break;
+    }
+    return cursor >= maxX; // the whole line is covered → full
   }
 
   private endRun(): void {

@@ -34,11 +34,14 @@ export function RamsToast({ text, nonce }: { text: string | null; nonce: number 
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.12 }}
-          className="absolute left-4 bottom-28 flex items-end gap-3 pointer-events-none z-30"
+          className="absolute left-2 flex items-end gap-2 pointer-events-none z-30"
+          style={{ bottom: "calc(max(0.9rem, env(safe-area-inset-bottom)) + 6px)" }}
         >
-          <PixelRams size={58} />
-          <div className="bg-paper/95 border border-case rounded-lg px-3 py-2 shadow-contact mb-1">
-            <p className="dot-matrix text-[13px] text-ink">{shown}</p>
+          <PixelRams size={44} />
+          {/* compact speech bubble, tucked left of the NEXT tray */}
+          <div className="relative bg-paper/95 border border-case rounded-lg px-2 py-1.5 shadow-contact mb-1 max-w-[132px]">
+            <p className="dot-matrix text-[10px] leading-[1.25] text-ink">{shown}</p>
+            <span className="absolute -left-[5px] bottom-2 w-2 h-2 rotate-45 bg-paper/95 border-l border-b border-case" />
           </div>
         </motion.div>
       )}

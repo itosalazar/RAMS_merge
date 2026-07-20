@@ -118,12 +118,12 @@ export const useMeta = create<MetaState>()(
       },
 
       bumpTierCount: (tier) =>
-        set((s) => ({
-          stats: {
-            ...s.stats,
-            perTierCreated: { ...s.stats.perTierCreated, [tier]: (s.stats.perTierCreated[tier] ?? 0) + 1 },
-          },
-        })),
+        set((s) => {
+          const per = s.stats.perTierCreated ?? {};
+          return {
+            stats: { ...s.stats, perTierCreated: { ...per, [tier]: (per[tier] ?? 0) + 1 } },
+          };
+        }),
 
       addMerges: (n) => set((s) => ({ stats: { ...s.stats, totalMerges: s.stats.totalMerges + n } })),
       addLaunch: () => set((s) => ({ stats: { ...s.stats, totalLaunches: s.stats.totalLaunches + 1 } })),
@@ -186,7 +186,24 @@ export const useMeta = create<MetaState>()(
 
       resetAll: () => set(initial),
     }),
-    { name: "rams-merge-v1", version: 1 }
+    {
+      name: "rams-merge-v1",
+      version: 1,
+      // deep-merge persisted state over defaults so a store written by an
+      // older build (missing a nested field) never drops sub-objects and
+      // crashes an updater — zustand's default merge is shallow.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<MetaState>;
+        return {
+          ...current,
+          settings: { ...current.settings, ...p.settings },
+          records: { ...current.records, ...p.records },
+          stats: { ...current.stats, ...p.stats },
+          archive: { ...current.archive, ...p.archive },
+          daily: { ...current.daily, ...p.daily },
+        };
+      },
+    }
   )
 );
 

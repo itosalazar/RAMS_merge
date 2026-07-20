@@ -7,7 +7,7 @@ import { TabRail } from "@/src/components/ui/TabRail";
 import { PushKey } from "@/src/components/ui/PushKey";
 import { useMeta } from "@/src/state/meta";
 import { audio } from "@/src/audio/AudioEngine";
-import { haptic } from "@/src/lib/haptics";
+import { haptic, initHaptics } from "@/src/lib/haptics";
 
 function SlideSwitch({
   label,
@@ -25,6 +25,7 @@ function SlideSwitch({
       className="w-full flex items-center justify-between bg-board border border-case rounded-lg p-4 shadow-contact min-h-16"
       onClick={() => {
         audio.unlock();
+        initHaptics();
         audio.ui("switch");
         haptic.ui();
         onChange(!value);

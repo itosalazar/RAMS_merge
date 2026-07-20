@@ -18,7 +18,7 @@ import { PRINCIPLES } from "@/src/data/principles";
 import type { GameMode } from "@/src/engine/modes";
 import { modeInfo } from "@/src/engine/modes";
 import { audio } from "@/src/audio/AudioEngine";
-import { haptic, setHaptics } from "@/src/lib/haptics";
+import { haptic, setHaptics, initHaptics } from "@/src/lib/haptics";
 import { useMeta } from "@/src/state/meta";
 import { dailySeed } from "@/src/engine/rng";
 import { ProductThumb } from "./ProductThumb";
@@ -94,6 +94,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
       engine.events.on("staged", ({ queue }) => setQueue(queue)),
       engine.events.on("launch", ({ tier }) => {
         audio.launch();
+        haptic.launch();
         const m = meta.getState();
         m.addLaunch();
         // throwing an object is meeting it — spawn tiers enter the archive
@@ -103,11 +104,11 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         const matA = productForTier(Math.max(1, tierA)).material;
         const matB = productForTier(Math.max(1, tierB)).material;
         audio.impact(matA, matB, energy, (tierA + tierB) / 2 || 1);
-        if (energy > 0.25) haptic.impact();
+        if (energy > 0.12) haptic.impact(energy);
       }),
       engine.events.on("merge", ({ tier, chain }) => {
         audio.merge(tier);
-        haptic.merge();
+        haptic.merge(tier);
         const m = meta.getState();
         m.addMerges(1);
         m.bumpTierCount(tier);
@@ -123,6 +124,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
       engine.events.on("combo", ({ chain }) => {
         setCombo(chain);
         audio.combo(chain);
+        haptic.combo(chain);
         if (comboTimeout.current) clearTimeout(comboTimeout.current);
         comboTimeout.current = setTimeout(() => setCombo(0), 1600);
         const m = meta.getState();
@@ -146,6 +148,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
         setRemainingS(remainingS ?? null);
       }),
       engine.events.on("gameover", ({ score, largestTier, merges, durationS }) => {
+        haptic.gameover();
         const m = meta.getState();
         m.addRun();
         m.addPlayTime(durationS);
@@ -238,6 +241,7 @@ export function GameScreen({ mode }: { mode: GameMode }) {
   const onPointerDown = (e: React.PointerEvent) => {
     if (paused || over) return;
     audio.unlock();
+    initHaptics();
     if (music) audio.startMusic(mode === "zen" ? "zen" : mode === "speed-merge" ? "speed" : "focus");
     const p = planePoint(e);
     dragState.current = { id: e.pointerId, startX: p.x, startY: p.y, aiming: false };
@@ -436,13 +440,13 @@ export function GameScreen({ mode }: { mode: GameMode }) {
                 {[7, 9, 7].map((n, row) => (
                   <div key={row} className="flex gap-[5px]">
                     {Array.from({ length: n }, (_, i) => (
-                      <span key={i} className="w-1 h-1 rounded-full bg-graphite/50 shadow-[0_0.5px_0_rgba(255,255,255,0.8)]" />
+                      <span key={i} className="w-1 h-1 rounded-full bg-[#8a8e95] shadow-[0_0.5px_0_rgba(255,255,255,0.8)]" />
                     ))}
                   </div>
                 ))}
               </div>
-              <h2 className="text-2xl font-extrabold tracking-tight">PAUSED</h2>
-              <p className="text-[13px] text-graphite mt-1 mb-6">{info.caption}</p>
+              <h2 className="text-2xl font-extrabold tracking-tight text-[#232528]">PAUSED</h2>
+              <p className="text-[13px] text-[#55585e] mt-1 mb-6">{info.caption}</p>
               <div className="flex flex-col gap-3">
                 <PushKey
                   variant="primary"
@@ -488,10 +492,17 @@ export function GameScreen({ mode }: { mode: GameMode }) {
                     : "THE BOARD IS FULL"}
                 {over.newRecord && <span className="text-orange"> · NEW RECORD</span>}
               </p>
-              <p className="dot-matrix text-5xl text-ink mb-6">
+              <p className="dot-matrix text-5xl text-ink mb-1">
                 {mode === "time-attack" || mode === "speed-merge"
                   ? fmtTime(over.durationS)
                   : over.score.toLocaleString("en-US")}
+              </p>
+              <p className="text-[13px] text-graphite mb-6">
+                {mode === "time-attack"
+                  ? "Built it. Go again or step back to the menu."
+                  : mode === "speed-merge"
+                    ? "The clock caught up. Go again or step back to the menu."
+                    : "No room left to place a product — this session is complete."}
               </p>
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <Stat label="MERGES" value={String(over.merges)} />

@@ -16,6 +16,7 @@ import { TabRail } from "@/src/components/ui/TabRail";
 import { MODES } from "@/src/engine/modes";
 import { useMeta } from "@/src/state/meta";
 import { audio } from "@/src/audio/AudioEngine";
+import { haptic, initHaptics } from "@/src/lib/haptics";
 import { PRODUCTS } from "@/src/data/products";
 
 /* ── the speaker face ────────────────────────────────────────────── */
@@ -146,6 +147,7 @@ export default function Home() {
       if (tick !== lastTick.current) {
         lastTick.current = tick;
         audio.ui("tick");
+        haptic.scroll();
       }
       const live = Math.round(-v / GAP);
       setIdx((p) => {
@@ -209,6 +211,7 @@ export default function Home() {
               dragConstraints={{ left: -rulerW, right: 0 }}
               dragElastic={0.08}
               dragMomentum={false}
+              onPointerDown={() => initHaptics()}
               onDragEnd={() => snapTo(Math.round(-x.get() / GAP))}
             >
               {/* millimetre ticks */}

@@ -37,8 +37,8 @@ export const COMBO_MULT = (chain: number) => Math.min(3, 1 + 0.5 * (chain - 1));
 
 /** Failure. */
 export const OCCUPANCY_WARN = 0.7;
-export const OCCUPANCY_FAIL = 0.85;
-export const FAIL_SUSTAIN_MS = 3000;
+export const OCCUPANCY_FAIL = 0.9; // safety net; boardFull() is the real signal
+export const FAIL_SUSTAIN_MS = 1000;
 
 /** Spawn distribution over tiers 1–5. */
 export const SPAWN_WEIGHTS = [30, 27, 20, 14, 9];
