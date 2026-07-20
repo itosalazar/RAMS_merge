@@ -158,7 +158,7 @@ export default function ArchivePage() {
                     <div className="w-8 h-1 rounded-full bg-case mx-auto mb-5" />
                     {/* the exhibit: a large study of the object on its stage */}
                     <div className="rounded-2xl bg-[linear-gradient(180deg,#f4f5f7_0%,#e6e8eb_70%,#dcdee2_100%)] border border-white/70 shadow-contact flex items-end justify-center pt-6 pb-4 mb-5">
-                      <ProductThumb tier={p.tier} size={172} />
+                      <ProductThumb tier={p.tier} size={230} />
                     </div>
                     <div>
                       <p className="text-[11px] font-medium tracking-[0.12em] text-orange">{p.year}</p>

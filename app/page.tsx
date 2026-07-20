@@ -160,8 +160,8 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-dvh max-w-md mx-auto w-full">
       <main
-        className="flex-1 flex flex-col items-center px-6"
-        style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
+        className="flex-1 flex flex-col items-center justify-center px-6"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         {/* the speaker face */}
         <SpeakerField size={300} />
@@ -259,7 +259,7 @@ export default function Home() {
           </div>
         </section>
 
-        <p className="mt-auto pb-4 text-[11px] text-graphite/50">Weniger, aber besser.</p>
+        <p className="mt-8 pb-4 text-[11px] text-graphite/50">Weniger, aber besser.</p>
       </main>
       <TabRail />
     </div>
