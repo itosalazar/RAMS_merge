@@ -129,6 +129,18 @@ export default function SettingsPage() {
           <br />
           Everything is stored on this device. No accounts, no tracking, nothing expires.
         </p>
+        <p className="mt-4 text-[11px] text-graphite/50 leading-relaxed selectable">
+          Created by{" "}
+          <a
+            href="https://www.itosalazar.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange font-medium"
+          >
+            Ito Salazar
+          </a>
+          <br />© 2026 — www.itosalazar.com
+        </p>
       </main>
       <TabRail />
     </div>
